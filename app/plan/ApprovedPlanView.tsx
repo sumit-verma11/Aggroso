@@ -17,7 +17,7 @@ export function ApprovedPlanView({ plan }: { plan: ApprovedPlan }) {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center gap-2 rounded-full bg-[var(--brand-soft)] px-4 py-2 text-sm font-medium text-[var(--brand-strong)]">
-        <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[var(--brand)] text-xs text-white">
+        <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[var(--brand-strong)] text-xs text-white dark:bg-[var(--brand)] dark:text-zinc-900">
           ✓
         </span>
         Approved{plan.approvedAt ? ` ${new Date(plan.approvedAt).toLocaleString()}` : ""}

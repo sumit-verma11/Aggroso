@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { primaryButtonClass } from "./components/ui";
 
 export default function ErrorBoundary({
   error,
@@ -23,7 +24,7 @@ export default function ErrorBoundary({
       <button
         type="button"
         onClick={reset}
-        className="rounded-full bg-[var(--brand)] px-5 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-[var(--brand-strong)]"
+        className={primaryButtonClass}
       >
         Try again
       </button>

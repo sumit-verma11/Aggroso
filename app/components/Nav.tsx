@@ -12,7 +12,7 @@ const LINKS = [
 
 function LogoMark() {
   return (
-    <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--brand)] text-white shadow-sm">
+    <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--brand-strong)] text-white shadow-sm dark:bg-[var(--brand)] dark:text-zinc-900">
       <svg
         width="16"
         height="16"

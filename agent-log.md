@@ -225,3 +225,40 @@ Format per entry: what happened, what was wrong, why, what I did instead.
     rather than a plan-generation one (the model always proposes complete
     quantities; the user edits/reviews afterward) — a judgment call worth
     being able to defend in the interview, not a gap.
+
+## Pixel-by-pixel visual/a11y pass (while Gemini's daily free-tier quota was exhausted)
+- Confirmed via direct API call that the Gemini key's rate-limiting is a **daily** free-tier
+  quota (`GenerateRequestsPerDayPerProjectPerModel-FreeTier`, limit 20/model/day), not a
+  transient per-minute limit — checked the other candidate models too (gemini-2.0-flash-lite
+  has 0 free quota on this project; gemini-2.5-flash-lite is 404/deprecated). User chose to
+  stay on the free tier rather than enable billing; plan is to wait for the daily reset
+  (~midnight Pacific) and do one minimal live check afterward rather than keep spending quota
+  on repeated automated tests.
+- Used the wait to do everything that doesn't need Gemini: a 64-combination horizontal-overflow
+  sweep (4 routes × 16 viewport widths, 320-1920px) — zero overflow found anywhere. Computed
+  actual WCAG contrast ratios (relative-luminance formula, not eyeballed) for every text/
+  background color pair in the design system, both themes.
+- Found and fixed a real, previously-unnoticed accessibility bug: white button text on
+  the brand-green background gave only 3.48:1 contrast in light mode (fails the 4.5:1 AA
+  minimum) and just 1.93:1 in dark mode (dark mode's brighter mint --brand with hardcoded
+  text-white — genuinely hard to read, not just a technicality). Affected every primary
+  button (Save profile, Extract meal, Confirm and save, Generate meal plan, Approve plan)
+  plus the nav logo icon and the approved-plan checkmark badge — same pattern in 4 files.
+  Fixed per-theme rather than one compromise color: light mode now uses the darker
+  --brand-strong with white text (5.16:1), dark mode keeps the brighter --brand but switches
+  to dark text (9.2:1). Verified with the same contrast formula against the actual rendered
+  computed styles (not just the source values) before and after, plus visual screenshots.
+- A QA subagent testing the meal-plan flow reported a page error on /plan: "Cannot read
+  properties of undefined (reading 'call')" with a persistent Next.js dev-overlay "1 Issue"
+  badge. Investigated before assuming either "real bug" or "ignore it": ran a full clean
+  production build (`next build` + `next start`, no dev-mode HMR) and hit /plan with a fresh
+  Playwright session — zero errors. Also hit the live Vercel deployment's /plan directly —
+  zero errors there too. Concluded this was dev-server HMR/webpack cache corruption from
+  ~2+ hours of continuous hot-reloading across the 4 parallel QA agents' testing (the same
+  category of issue hit earlier this session with a literal "Cannot find module" error from
+  running build and dev against the same .next directory simultaneously) — not a real
+  application bug. Confirmed rather than assumed, in both directions.
+- Checked heading hierarchy (exactly one h1 per page, all four routes) and keyboard focus
+  visibility (Tab through nav links and form inputs — all show a visible focus ring, custom
+  `focus:ring-2` box-shadow on inputs rather than the browser default, still clearly visible)
+  — both clean, no changes needed.
