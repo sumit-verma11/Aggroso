@@ -56,3 +56,23 @@ Format per entry: what happened, what was wrong, why, what I did instead.
   meat only, cooked, roasted", fdcId 171477: 165 kcal/31g protein/0g carbs/3.57g fat
   per 100g), added it as the seed CSV's 88th row, and rewrote the test fixtures to
   match it exactly instead of leaving invented numbers in the test suite.
+
+## Module 6 — Profile screen
+- Also caught, separately: Next builds statically pre-rendered "/" and "/profile" at
+  build time by default, which would have baked a stale DB read into the deployed
+  build and never updated again. Added `export const dynamic = "force-dynamic"` to
+  both routes; confirmed via `next build` output that they moved from `○ (Static)` to
+  `ƒ (Dynamic)`.
+- Verified the profile screen with a real headless browser (Playwright via npx, since
+  the environment's `chromium-cli` skill tool wasn't installed), not just curl/unit
+  tests — curl can't drive a Next.js Server Action (it needs the framework's encrypted
+  action reference), so a raw POST would have proven nothing.
+- That browser test caught a real bug: submitting an invalid calorie target (50, below
+  the 800 minimum) showed the error message, but the input field silently reverted to
+  the last-saved DB value (2000) instead of keeping what I'd actually typed. Root cause:
+  the inputs are uncontrolled (`defaultValue`), and `revalidatePath` in the server
+  action triggers a fresh render of the parent Server Component on the same
+  navigation, which resets `defaultValue`-based fields on remount. Fixed by having the
+  action echo back the raw submitted strings in its error state and having the form
+  prefer those over the stale DB value. Would not have caught this from unit tests or
+  a curl check alone — needed the actual browser round-trip.
