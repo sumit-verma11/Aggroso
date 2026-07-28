@@ -44,8 +44,8 @@ body {
   position: relative;
 }
 
-/* Decorative, non-interactive background: two soft blurred fields (brand
-   green + warm accent) plus a faint dot grid, fixed behind all content. */
+/* Decorative, non-interactive background: real line/circle SVG shapes
+   (see BackgroundArt.tsx) plus a faint dot grid, fixed behind all content. */
 .app-backdrop {
   position: fixed;
   inset: 0;
@@ -54,37 +54,11 @@ body {
   pointer-events: none;
 }
 
-.app-backdrop::before,
-.app-backdrop::after {
-  content: "";
-  position: absolute;
-  border-radius: 9999px;
-  filter: blur(70px);
-  opacity: 0.35;
-}
-
-.app-backdrop::before {
-  width: 34rem;
-  height: 34rem;
-  top: -12rem;
-  right: -10rem;
-  background: radial-gradient(circle, var(--brand) 0%, transparent 70%);
-}
-
-.app-backdrop::after {
-  width: 26rem;
-  height: 26rem;
-  bottom: -8rem;
-  left: -8rem;
-  background: radial-gradient(circle, var(--accent) 0%, transparent 70%);
-  opacity: 0.18;
-}
-
 .app-backdrop-grid {
   position: absolute;
   inset: 0;
-  background-image: radial-gradient(var(--surface-border) 1px, transparent 1px);
-  background-size: 28px 28px;
-  mask-image: linear-gradient(to bottom, black, transparent 65%);
-  opacity: 0.6;
+  background-image: radial-gradient(var(--surface-border) 1.5px, transparent 1.5px);
+  background-size: 26px 26px;
+  mask-image: radial-gradient(ellipse at center, black, transparent 75%);
+  opacity: 0.8;
 }

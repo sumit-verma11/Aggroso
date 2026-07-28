@@ -66,6 +66,15 @@ resolve alone:
 - GitHub repo and Vercel deployment strategy → user provided an existing
   (near-empty) repo and chose to connect Vercel via its dashboard rather
   than the CLI.
+- Removing the persistent disclaimer banner after the initial UI pass →
+  user asked directly. Before removing it, the agent checked the actual
+  assignment text and pointed out that the literal requirement is
+  behavioral ("must not provide medical diagnosis, treatment, or
+  guaranteed health outcomes"), not a mandate to display a banner, and
+  that the app's behavior satisfies this regardless of whether a banner
+  is shown. Flagged the trade-off (an evaluator could still read its total
+  absence as "didn't consider it") rather than silently complying; user
+  confirmed removal after hearing that.
 
 Everything else — schema field names, the retry/logging architecture, the
 lookup-matching algorithm, UI copy, test cases — was the agent's own
