@@ -86,7 +86,7 @@ export function convertToGrams(quantity: number, unit: string): number | null {
   return quantity * factor;
 }
 
-function round2(n: number): number {
+export function round2(n: number): number {
   return Math.round(n * 100) / 100;
 }
 
@@ -95,41 +95,51 @@ function scaledValue(grams: number, item: NutritionValues, key: keyof Omit<Nutri
   return round2(item[key] * scale);
 }
 
-function zeroBreakdown(input: MealItemInput, status: ItemStatus, grams: number | null): ItemBreakdown {
+export interface ComputedItem {
+  status: ItemStatus;
+  grams: number | null;
+  calories: number;
+  proteinG: number;
+  carbsG: number;
+  fatG: number;
+}
+
+const ZERO_NUTRITION = { calories: 0, proteinG: 0, carbsG: 0, fatG: 0 };
+
+/**
+ * The single per-item arithmetic path — used both server-side (initial
+ * draft, final confirm) and client-side (live recompute when a user edits
+ * quantity/unit) so both places do literally the same math, not a
+ * hand-duplicated copy that could drift.
+ */
+export function computeItem(
+  quantity: number,
+  unit: string,
+  nutritionItem: NutritionValues | null
+): ComputedItem {
+  if (!nutritionItem) {
+    return { status: "unresolved_item", grams: null, ...ZERO_NUTRITION };
+  }
+
+  const grams = convertToGrams(quantity, unit);
+  if (grams === null) {
+    return { status: "unresolved_quantity", grams: null, ...ZERO_NUTRITION };
+  }
+
   return {
-    id: input.id,
-    name: input.name,
-    status,
+    status: "computed",
     grams,
-    calories: 0,
-    proteinG: 0,
-    carbsG: 0,
-    fatG: 0,
+    calories: scaledValue(grams, nutritionItem, "calories"),
+    proteinG: scaledValue(grams, nutritionItem, "proteinG"),
+    carbsG: scaledValue(grams, nutritionItem, "carbsG"),
+    fatG: scaledValue(grams, nutritionItem, "fatG"),
   };
 }
 
 export function calculateMealTotals(inputs: MealItemInput[]): MealTotals {
   const items: ItemBreakdown[] = inputs.map((input) => {
-    if (!input.nutritionItem) {
-      return zeroBreakdown(input, "unresolved_item", null);
-    }
-
-    const grams = convertToGrams(input.quantity, input.unit);
-    if (grams === null) {
-      return zeroBreakdown(input, "unresolved_quantity", null);
-    }
-
-    const item = input.nutritionItem;
-    return {
-      id: input.id,
-      name: input.name,
-      status: "computed",
-      grams,
-      calories: scaledValue(grams, item, "calories"),
-      proteinG: scaledValue(grams, item, "proteinG"),
-      carbsG: scaledValue(grams, item, "carbsG"),
-      fatG: scaledValue(grams, item, "fatG"),
-    };
+    const computed = computeItem(input.quantity, input.unit, input.nutritionItem);
+    return { id: input.id, name: input.name, ...computed };
   });
 
   const computed = items.filter((i) => i.status === "computed");

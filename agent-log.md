@@ -93,3 +93,31 @@ Format per entry: what happened, what was wrong, why, what I did instead.
   the math checked out by hand against the seed CSV; items with no stated quantity at
   all (e.g. "chicken breast" with no amount mentioned) still correctly became
   clarification questions rather than guesses.
+
+## Module 6 — Review/confirm (editable, persistence)
+- `db.transaction()` doesn't exist for `@neondatabase/serverless`'s HTTP driver — it
+  throws "No transactions support in neon-http driver" (there's no persistent
+  connection to hold a multi-statement session open over HTTP). Found this by reading
+  the driver source before writing lib/db/meals.ts, not by hitting the error at
+  runtime. Used `db.batch()` instead (neon-http's atomic alternative), which requires
+  every statement's values up front — so the meal's id is generated in application
+  code (`crypto.randomUUID()`) rather than left to the database's `DEFAULT
+  gen_random_uuid()`, so meal_items can reference it in the same batch without a
+  round-trip to read back an auto-generated id.
+- Building the editable review screen, I found and fixed a real bug in my own code
+  before it ever ran: answering a clarification's quantity field called the same
+  `updateQuantity` handler used for normal edits, which unconditionally recomputed
+  macros from the matched KB item and reset `manuallyEntered: false` — for an
+  unresolved item (no KB match at all), this would have silently wiped out whatever
+  nutrition values the user had just manually typed in, the moment they answered the
+  quantity clarification. Fixed by only letting quantity/unit edits drive a recompute
+  when a KB reference actually exists; otherwise they're just record-keeping and
+  leave the manually-entered macros alone.
+- Verified live end-to-end (real Gemini, real Neon) with a meal containing both a
+  KB-matched item and one requiring manual entry + a clarification answer: the running
+  total correctly included the manual entry, the confirm button correctly stayed
+  disabled until the clarification was answered, and the saved DB rows showed exactly
+  the intended design — the matched item's `ai_calories === calories` with
+  `wasCorrected: false`, the manual item's `ai_calories: 0` (nothing was ever computed)
+  against `calories: 60` with `wasCorrected: true`, and the meal's stored totals
+  matching the sum by hand.
