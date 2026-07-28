@@ -27,10 +27,16 @@ nutrition numbers are retrieved from a documented source, never invented.
 
 - **Per-100g only, no per-piece weights.** USDA's search endpoint doesn't
   return standard serving/measure data (e.g. "1 egg = 50 g"), only per-100g
-  proximates. The app's calculation engine converts weight/volume units (g,
-  kg, ml) directly, but a quantity like "2 eggs" or "1 banana" needs a
-  gram estimate the user supplies — surfaced as a clarification question
-  rather than guessed.
+  proximates. The deterministic calculation engine (`lib/nutrition/
+  calculate.ts`) only converts weight/volume units (g, kg, oz, lb, ml, l) —
+  it has no food-specific "1 piece = N grams" table. Household units like
+  "2 eggs" or "a slice of toast" are instead converted to grams/ml by the AI
+  extraction layer itself, using its own estimate of a typical reference
+  weight (a portion-size estimate, not a nutrition value — the extraction
+  prompt is still forbidden from returning any calorie/macro number). Every
+  such conversion is surfaced to the user as an assumption on the review
+  screen, and a portion the model can't reasonably estimate becomes a
+  clarification question instead of a guess.
 - **Single variant per food.** Where USDA has many preparations of the same
   ingredient (e.g. dozens of bread or cheese variants), one representative
   row was picked. A meal description that names a different variant (e.g.

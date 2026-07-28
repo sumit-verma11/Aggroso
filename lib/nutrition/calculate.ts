@@ -49,10 +49,15 @@ export interface MealTotals {
 }
 
 // Standard, food-independent unit-to-gram conversion factors. Deliberately
-// limited to weight units: converting "1 piece" or "1 cup" to grams needs a
-// per-food reference weight our knowledge base doesn't have (documented in
-// data/README.md), so those are surfaced as unresolved_quantity rather than
-// guessed.
+// limited to weight/volume units: converting "1 piece" or "1 cup" to grams
+// needs a per-food reference weight our knowledge base doesn't have
+// (documented in data/README.md), so those are surfaced as
+// unresolved_quantity rather than guessed. The AI extraction layer is
+// responsible for turning household units ("2 large eggs", "a glass of OJ")
+// into grams/ml before this ever runs (see lib/ai/extract.ts's prompt).
+//
+// ml/l use a 1g = 1ml water-density approximation — close enough for most
+// foods/drinks logged here, but a real approximation, not a measured value.
 const WEIGHT_UNITS_TO_GRAMS: Record<string, number> = {
   g: 1,
   gram: 1,
@@ -67,6 +72,12 @@ const WEIGHT_UNITS_TO_GRAMS: Record<string, number> = {
   lbs: 453.592,
   pound: 453.592,
   pounds: 453.592,
+  ml: 1,
+  milliliter: 1,
+  milliliters: 1,
+  l: 1000,
+  liter: 1000,
+  liters: 1000,
 };
 
 export function convertToGrams(quantity: number, unit: string): number | null {

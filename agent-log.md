@@ -76,3 +76,20 @@ Format per entry: what happened, what was wrong, why, what I did instead.
   action echo back the raw submitted strings in its error state and having the form
   prefer those over the stale DB value. Would not have caught this from unit tests or
   a curl check alone — needed the actual browser round-trip.
+
+## Module 6 — Meal entry
+- Live-tested the entry -> extraction -> lookup -> calculation pipeline end to end
+  (real Gemini call, real Neon DB) with a realistic multi-item meal description. Found
+  a significant usability gap the unit tests couldn't have caught: Gemini was
+  returning natural-language units ("2 large", "1 slice", "1 glass"), and the
+  calculation engine's unit table only understands g/kg/oz/lb — so nearly every real
+  item came back "needs a gram quantity" and the whole meal showed 0 kcal. Fixed by
+  having the extraction prompt itself convert household portions to grams/ml using
+  typical reference weights, surfacing each conversion in "assumptions" (a portion-
+  size estimate, not a nutrition value — the model still never touches a calorie or
+  macro number). Added ml/l to the calculation engine's conversion table (1g=1ml
+  water-density approximation, documented in data/README.md) since liquids now arrive
+  in ml. Re-tested live afterward: real gram/ml quantities came through correctly and
+  the math checked out by hand against the seed CSV; items with no stated quantity at
+  all (e.g. "chicken breast" with no amount mentioned) still correctly became
+  clarification questions rather than guesses.

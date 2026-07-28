@@ -19,6 +19,11 @@ describe("convertToGrams", () => {
     expect(convertToGrams(1, "lb")).toBeCloseTo(453.592, 3);
   });
 
+  it("converts ml and l using a 1g=1ml density approximation", () => {
+    expect(convertToGrams(240, "ml")).toBe(240);
+    expect(convertToGrams(1, "l")).toBe(1000);
+  });
+
   it("is case-insensitive and trims whitespace", () => {
     expect(convertToGrams(2, " KG ")).toBe(2000);
   });
