@@ -2,7 +2,8 @@
 
 A single-user wellness app. The user can:
 - Create a profile: daily calorie target, dietary preferences, allergies, foods to avoid
-- Log a meal by typing a free-text description
+- Log a meal by typing a description in the supported text format — see
+  README.md's "Meal text input format" for the documented contract
 - Review the extracted food items, quantities, and preparation methods
 - Correct any calorie or nutrition value before saving
 - See today's intake against their calorie target
@@ -33,7 +34,9 @@ API before building on it. See `lib/ai/gemini.ts`.
   estimate, the app asks a clarification question before saving.
 - Nothing is written to meal history or plans without explicit user approval.
 - The app must never provide medical diagnosis, treatment, or guaranteed outcomes.
-  A persistent disclaimer appears in the UI.
+  This is behavioral (no screen, prompt, or generated copy does any of those
+  things) — there is deliberately no UI disclaimer banner; see README.md's
+  "Intentionally out of scope" section for why.
 
 Every screen needs: loading, empty, validation error, success, and failure states.
 

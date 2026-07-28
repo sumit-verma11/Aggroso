@@ -85,6 +85,55 @@ npm run build        # production build
 First run: the app redirects `/` → `/profile` until a profile exists, then
 `/` → `/log`.
 
+## Meal text input format
+
+Meal entry accepts a specific supported format, not arbitrary free text:
+one or more food items, described in English, separated by commas and/or
+"and", each optionally carrying a **quantity + unit** and/or a
+**preparation method**. This is the actual contract `lib/ai/extract.ts`'s
+prompt is built against — not a guess at what might work.
+
+```
+<food> [quantity + unit] [preparation method], <food> [quantity + unit] [preparation method], ...
+```
+
+- **Quantity/unit** can be a precise weight/volume ("200g chicken breast",
+  "250ml milk") or an ordinary household portion ("2 eggs", "a slice of
+  toast", "a glass of orange juice", "a medium banana") — the extraction
+  step converts household portions to grams/ml itself, using a stated
+  reference weight it discloses back to you as an assumption on the review
+  screen. If quantity is omitted entirely and can't be reasonably
+  estimated (e.g. "some rice", "a bit of chicken"), you'll be asked a
+  clarification question before the item can be confirmed.
+- **Preparation method** is optional, but omitting it for a food where
+  preparation materially changes the calorie count (fried vs. boiled vs.
+  raw) also triggers a clarification question rather than an assumption.
+- **Minimum length**: 3 characters (validated before any API call is
+  made). No enforced maximum, but very long descriptions cost more
+  latency/tokens per the same rules.
+- **Language**: English. The extraction prompt is written in English and
+  hasn't been tested against other languages.
+
+**Examples that work well:**
+
+```
+2 scrambled eggs, a slice of toast with butter, and a glass of orange juice
+200g grilled chicken breast with 150g white rice
+1 medium banana and a cup of black coffee
+```
+
+**Examples that need attention before saving** (by design, not a bug — two
+different, deliberate mechanisms):
+
+```
+some rice and chicken     → clarification question: no quantity stated for either item
+grilled chicken           → clarification question: quantity missing
+a bit of paneer           → flagged "not in knowledge base" on the review screen
+                             (paneer isn't one of the 88 seeded foods — see data/README.md);
+                             the item can still be saved by entering its nutrition
+                             values manually
+```
+
 ## What's implemented
 
 | Requirement | Where |
