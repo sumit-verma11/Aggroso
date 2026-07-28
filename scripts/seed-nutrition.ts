@@ -1,11 +1,18 @@
-import "dotenv/config";
+import { config } from "dotenv";
 import { readFileSync } from "fs";
 import { join } from "path";
-import { db } from "../lib/db";
-import { nutritionItems } from "../lib/db/schema";
 import { parseSeedCsv } from "../lib/nutrition/seed-csv";
 
+config({ path: ".env.local" });
+config();
+
 async function main() {
+  // Dynamic import: lib/db throws if DATABASE_URL is unset, and static
+  // imports are hoisted above the config() calls above regardless of
+  // source order, so it must load after env vars are in place.
+  const { db } = await import("../lib/db");
+  const { nutritionItems } = await import("../lib/db/schema");
+
   const csvPath = join(process.cwd(), "data", "nutrition-seed.csv");
   const csvContent = readFileSync(csvPath, "utf8");
   const rows = parseSeedCsv(csvContent);
