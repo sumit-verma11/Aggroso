@@ -11,8 +11,17 @@ A single-user wellness app. The user can:
 ## Stack (locked — do not substitute)
 - Next.js 15 App Router, TypeScript, Tailwind
 - Postgres on Neon, Drizzle ORM
-- Google Gemini (gemini-2.5-flash) via `@google/generative-ai`
+- Google Gemini via `@google/genai` — see substitution note below
 - Deployed on Vercel
+
+**Substitution note:** the original spec named `gemini-2.5-flash` via
+`@google/generative-ai`. Both are stale: `@google/generative-ai` hasn't been
+published since April 2025 and is superseded by `@google/genai` (actively
+maintained), and `gemini-2.5-flash` returns 404 "no longer available to new
+users" for the API key in use. Using `gemini-flash-latest` (Google's
+maintained alias for the current recommended flash model, currently
+resolving to `gemini-3.6-flash`) instead — verified directly against the
+API before building on it. See `lib/ai/gemini.ts`.
 
 ## Hard architectural rules (these are graded, do not violate)
 - The LLM extracts and structures text. It NEVER performs arithmetic.
