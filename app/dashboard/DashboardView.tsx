@@ -3,6 +3,59 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { MealWithItems } from "@/lib/db/meals";
+import { cardClass, inputClass } from "@/app/components/ui";
+
+function CalorieRing({
+  pct,
+  overTarget,
+  calories,
+  calorieTarget,
+}: {
+  pct: number;
+  overTarget: boolean;
+  calories: number;
+  calorieTarget: number;
+}) {
+  const size = 132;
+  const stroke = 10;
+  const radius = (size - stroke) / 2;
+  const circumference = 2 * Math.PI * radius;
+  const offset = circumference * (1 - pct / 100);
+  const ringColor = overTarget ? "#ef4444" : "var(--brand)";
+
+  return (
+    <div className="relative flex h-[132px] w-[132px] shrink-0 items-center justify-center">
+      <svg width={size} height={size} className="-rotate-90">
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          fill="none"
+          stroke="var(--brand-soft)"
+          strokeWidth={stroke}
+        />
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          fill="none"
+          stroke={ringColor}
+          strokeWidth={stroke}
+          strokeLinecap="round"
+          strokeDasharray={circumference}
+          strokeDashoffset={offset}
+          style={{ transition: "stroke-dashoffset 0.4s ease" }}
+        />
+      </svg>
+      <div className="absolute flex flex-col items-center">
+        <span className="text-xl font-semibold">{calories.toFixed(0)}</span>
+        <span className="text-[0.65rem] text-zinc-500 dark:text-zinc-400">
+          of {calorieTarget} kcal
+        </span>
+      </div>
+    </div>
+  );
+}
 
 export function DashboardView({
   date,
@@ -38,48 +91,43 @@ export function DashboardView({
         value={date}
         max={new Date().toISOString().slice(0, 10)}
         onChange={(e) => router.push(`/dashboard?date=${e.target.value}`)}
-        className="w-fit rounded-md border border-zinc-300 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900"
+        className={`${inputClass} w-fit`}
       />
 
-      <div>
-        <div className="mb-1 flex items-baseline justify-between text-sm">
-          <span className="font-medium">
-            {totals.calories.toFixed(0)} / {calorieTarget} kcal
-          </span>
-          <span className="text-zinc-500 dark:text-zinc-400">{pct}%</span>
-        </div>
-        <div className="h-2 w-full overflow-hidden rounded-full bg-zinc-200 dark:bg-zinc-800">
-          <div
-            className={`h-full ${overTarget ? "bg-red-500" : "bg-zinc-900 dark:bg-zinc-50"}`}
-            style={{ width: `${pct}%` }}
-          />
-        </div>
-        {overTarget && (
-          <p className="mt-1 text-xs text-red-600 dark:text-red-400">
-            Over calorie target by {(totals.calories - calorieTarget).toFixed(0)} kcal.
-          </p>
-        )}
-      </div>
-
-      <div className="grid grid-cols-3 gap-3 text-sm">
-        <div className="rounded border border-zinc-200 p-3 dark:border-zinc-800">
-          <div className="text-zinc-500 dark:text-zinc-400">Protein</div>
-          <div className="font-medium">{totals.proteinG.toFixed(1)}g</div>
-        </div>
-        <div className="rounded border border-zinc-200 p-3 dark:border-zinc-800">
-          <div className="text-zinc-500 dark:text-zinc-400">Carbs</div>
-          <div className="font-medium">{totals.carbsG.toFixed(1)}g</div>
-        </div>
-        <div className="rounded border border-zinc-200 p-3 dark:border-zinc-800">
-          <div className="text-zinc-500 dark:text-zinc-400">Fat</div>
-          <div className="font-medium">{totals.fatG.toFixed(1)}g</div>
+      <div className={`${cardClass} flex flex-wrap items-center gap-6`}>
+        <CalorieRing
+          pct={pct}
+          overTarget={overTarget}
+          calories={totals.calories}
+          calorieTarget={calorieTarget}
+        />
+        <div className="flex flex-1 flex-col gap-3">
+          {overTarget && (
+            <p className="text-xs font-medium text-red-600 dark:text-red-400">
+              Over calorie target by {(totals.calories - calorieTarget).toFixed(0)} kcal
+            </p>
+          )}
+          <div className="grid grid-cols-3 gap-3 text-sm">
+            <div className="rounded-xl border border-[var(--surface-border)] p-3">
+              <div className="text-xs text-zinc-500 dark:text-zinc-400">Protein</div>
+              <div className="font-semibold">{totals.proteinG.toFixed(1)}g</div>
+            </div>
+            <div className="rounded-xl border border-[var(--surface-border)] p-3">
+              <div className="text-xs text-zinc-500 dark:text-zinc-400">Carbs</div>
+              <div className="font-semibold">{totals.carbsG.toFixed(1)}g</div>
+            </div>
+            <div className="rounded-xl border border-[var(--surface-border)] p-3">
+              <div className="text-xs text-zinc-500 dark:text-zinc-400">Fat</div>
+              <div className="font-semibold">{totals.fatG.toFixed(1)}g</div>
+            </div>
+          </div>
         </div>
       </div>
 
       {meals.length === 0 ? (
-        <p className="text-sm text-zinc-500 dark:text-zinc-400">
+        <div className={`${cardClass} text-center text-sm text-zinc-500 dark:text-zinc-400`}>
           No meals logged for this day.
-        </p>
+        </div>
       ) : (
         <ul className="flex flex-col gap-3">
           {meals.map((meal) => (
@@ -94,26 +142,30 @@ export function DashboardView({
 function MealCard({ meal }: { meal: MealWithItems }) {
   const [open, setOpen] = useState(false);
   return (
-    <li className="rounded border border-zinc-200 p-3 text-sm dark:border-zinc-800">
+    <li className={cardClass}>
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="flex w-full items-center justify-between text-left"
+        className="flex w-full items-center justify-between text-left text-sm"
         aria-expanded={open}
       >
-        <span className="font-medium capitalize">{meal.mealType}</span>
-        <span className="text-zinc-500 dark:text-zinc-400">
-          {meal.totalCalories.toFixed(0)} kcal {open ? "▲" : "▼"}
+        <span className="flex items-center gap-2 font-medium capitalize">
+          <span className="h-2 w-2 rounded-full bg-[var(--brand)]" />
+          {meal.mealType}
+        </span>
+        <span className="flex items-center gap-2 text-zinc-500 dark:text-zinc-400">
+          {meal.totalCalories.toFixed(0)} kcal
+          <span className={`transition-transform ${open ? "rotate-180" : ""}`}>⌄</span>
         </span>
       </button>
       {open && (
-        <ul className="mt-2 flex flex-col gap-2 border-t border-zinc-200 pt-2 dark:border-zinc-800">
+        <ul className="mt-3 flex flex-col gap-2 border-t border-[var(--surface-border)] pt-3 text-sm">
           {meal.items.map((item) => (
             <li key={item.id}>
               <div className="flex flex-wrap items-center gap-2">
                 <span className="capitalize">{item.rawExtractedName}</span>
                 {item.wasCorrected && (
-                  <span className="rounded bg-blue-100 px-1.5 py-0.5 text-xs text-blue-800 dark:bg-blue-950 dark:text-blue-300">
+                  <span className="rounded-full bg-sky-100 px-2 py-0.5 text-xs text-sky-800 dark:bg-sky-950 dark:text-sky-300">
                     corrected
                   </span>
                 )}

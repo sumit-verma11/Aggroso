@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { getProfile } from "@/lib/db/profiles";
 import { getMealsForDate } from "@/lib/db/meals";
 import { DashboardView } from "./DashboardView";
+import { PageHeader } from "@/app/components/PageHeader";
 
 export const dynamic = "force-dynamic";
 
@@ -27,11 +28,10 @@ export default async function DashboardPage({
 
   return (
     <div className="mx-auto w-full max-w-2xl px-4 py-10">
-      <h1 className="mb-1 text-2xl font-semibold">Daily intake</h1>
-      <p className="mb-6 text-sm text-zinc-500 dark:text-zinc-400">
-        Totals are the values stored when each meal was confirmed — nothing
-        here is recalculated by the AI.
-      </p>
+      <PageHeader
+        title="Daily intake"
+        description="Totals are the values stored when each meal was confirmed — nothing here is recalculated by the AI."
+      />
       <DashboardView date={date} calorieTarget={profile.calorieTarget} meals={meals} />
     </div>
   );

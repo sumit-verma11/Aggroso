@@ -4,6 +4,7 @@ import { getApprovedPlan } from "@/lib/db/meal-plans";
 import { getAllNutritionItems } from "@/lib/db/nutrition-items";
 import { PlanGenerator } from "./PlanGenerator";
 import { ApprovedPlanView } from "./ApprovedPlanView";
+import { PageHeader } from "@/app/components/PageHeader";
 
 export const dynamic = "force-dynamic";
 
@@ -24,8 +25,7 @@ export default async function PlanPage() {
 
   return (
     <div className="mx-auto w-full max-w-2xl px-4 py-10">
-      <h1 className="mb-1 text-2xl font-semibold">Meal plan for tomorrow</h1>
-      <p className="mb-6 text-sm text-zinc-500 dark:text-zinc-400">{targetDate}</p>
+      <PageHeader title="Meal plan for tomorrow" description={targetDate} />
       {existingPlan ? (
         <ApprovedPlanView plan={existingPlan} />
       ) : (

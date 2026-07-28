@@ -3,6 +3,7 @@
 import { useActionState } from "react";
 import { saveProfile, type ProfileActionState } from "./actions";
 import type { Profile } from "@/lib/db/profiles";
+import { cardClass, inputClass, primaryButtonClass } from "@/app/components/ui";
 
 const initialState: ProfileActionState = { status: "idle" };
 
@@ -28,9 +29,9 @@ export function ProfileForm({ initialProfile }: { initialProfile: Profile | null
     state.values?.avoidFoods ?? initialProfile?.avoidFoods.join(", ") ?? "";
 
   return (
-    <form action={formAction} className="flex flex-col gap-5">
+    <form action={formAction} className={`${cardClass} flex flex-col gap-5`}>
       <div>
-        <label htmlFor="calorieTarget" className="block text-sm font-medium mb-1">
+        <label htmlFor="calorieTarget" className="mb-1 block text-sm font-medium">
           Daily calorie target
         </label>
         <input
@@ -39,7 +40,7 @@ export function ProfileForm({ initialProfile }: { initialProfile: Profile | null
           type="number"
           inputMode="numeric"
           defaultValue={calorieTargetValue}
-          className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900"
+          className={inputClass}
           aria-invalid={Boolean(fieldError(state, "calorieTarget"))}
         />
         {fieldError(state, "calorieTarget") && (
@@ -50,7 +51,7 @@ export function ProfileForm({ initialProfile }: { initialProfile: Profile | null
       </div>
 
       <div>
-        <label htmlFor="dietaryPreferences" className="block text-sm font-medium mb-1">
+        <label htmlFor="dietaryPreferences" className="mb-1 block text-sm font-medium">
           Dietary preferences{" "}
           <span className="font-normal text-zinc-500">(comma-separated, optional)</span>
         </label>
@@ -60,12 +61,12 @@ export function ProfileForm({ initialProfile }: { initialProfile: Profile | null
           type="text"
           placeholder="e.g. vegetarian, high-protein"
           defaultValue={dietaryPreferencesValue}
-          className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900"
+          className={inputClass}
         />
       </div>
 
       <div>
-        <label htmlFor="allergies" className="block text-sm font-medium mb-1">
+        <label htmlFor="allergies" className="mb-1 block text-sm font-medium">
           Allergies <span className="font-normal text-zinc-500">(comma-separated, optional)</span>
         </label>
         <input
@@ -74,12 +75,12 @@ export function ProfileForm({ initialProfile }: { initialProfile: Profile | null
           type="text"
           placeholder="e.g. peanuts, shellfish"
           defaultValue={allergiesValue}
-          className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900"
+          className={inputClass}
         />
       </div>
 
       <div>
-        <label htmlFor="avoidFoods" className="block text-sm font-medium mb-1">
+        <label htmlFor="avoidFoods" className="mb-1 block text-sm font-medium">
           Foods to avoid{" "}
           <span className="font-normal text-zinc-500">(comma-separated, optional)</span>
         </label>
@@ -89,7 +90,7 @@ export function ProfileForm({ initialProfile }: { initialProfile: Profile | null
           type="text"
           placeholder="e.g. pork, cilantro"
           defaultValue={avoidFoodsValue}
-          className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900"
+          className={inputClass}
         />
       </div>
 
@@ -99,16 +100,12 @@ export function ProfileForm({ initialProfile }: { initialProfile: Profile | null
         </p>
       )}
       {state.status === "success" && state.message && (
-        <p role="status" className="text-sm text-green-700 dark:text-green-400">
+        <p role="status" className="text-sm text-[var(--brand-strong)]">
           {state.message}
         </p>
       )}
 
-      <button
-        type="submit"
-        disabled={isPending}
-        className="rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white disabled:opacity-50 dark:bg-zinc-50 dark:text-zinc-900"
-      >
+      <button type="submit" disabled={isPending} className={`${primaryButtonClass} self-start`}>
         {isPending ? "Saving..." : "Save profile"}
       </button>
     </form>

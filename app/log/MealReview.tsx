@@ -4,6 +4,21 @@ import { useState } from "react";
 import { computeItem, type NutritionValues } from "@/lib/nutrition/calculate";
 import type { MealDraft, DraftItem } from "@/lib/meal/draft";
 import { confirmMealAction, type ConfirmMealResult } from "./actions";
+import { cardClass, inputClass, primaryButtonClass } from "@/app/components/ui";
+
+const BADGE_BASE = "rounded-full px-2.5 py-0.5 text-xs font-medium";
+const badgeStyles = {
+  manual: `${BADGE_BASE} bg-sky-100 text-sky-800 dark:bg-sky-950 dark:text-sky-300`,
+  matched: `${BADGE_BASE} bg-[var(--brand-soft)] text-[var(--brand-strong)]`,
+  warning: `${BADGE_BASE} bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300`,
+  conflict: `${BADGE_BASE} bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300`,
+};
+
+const itemAccent = {
+  computed: "border-l-4 border-l-[var(--brand)]",
+  unresolved_item: "border-l-4 border-l-amber-400",
+  unresolved_quantity: "border-l-4 border-l-amber-400",
+};
 
 interface EditableItem {
   index: number;
@@ -197,14 +212,19 @@ export function MealReview({ draft }: { draft: MealDraft }) {
 
   if (confirmState.status === "success") {
     return (
-      <div className="rounded-md border border-green-200 bg-green-50 p-4 text-sm text-green-800 dark:border-green-900 dark:bg-green-950 dark:text-green-300">
-        {confirmState.message} Refresh or log another meal to continue.
+      <div className={`${cardClass} flex items-center gap-3 border-l-4 border-l-[var(--brand)] text-sm`}>
+        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[var(--brand-soft)] text-[var(--brand-strong)]">
+          ✓
+        </span>
+        <span className="text-[var(--brand-strong)]">
+          {confirmState.message} Refresh or log another meal to continue.
+        </span>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col gap-5 rounded-md border border-zinc-200 p-4 dark:border-zinc-800">
+    <div className={`${cardClass} flex flex-col gap-6`}>
       <div>
         <label htmlFor="mealType" className="mb-1 block text-sm font-medium">
           Meal type
@@ -213,7 +233,7 @@ export function MealReview({ draft }: { draft: MealDraft }) {
           id="mealType"
           value={mealType}
           onChange={(e) => setMealType(e.target.value as (typeof MEAL_TYPES)[number])}
-          className="rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900"
+          className={`${inputClass} w-fit`}
         >
           {MEAL_TYPES.map((t) => (
             <option key={t} value={t}>
@@ -224,49 +244,43 @@ export function MealReview({ draft }: { draft: MealDraft }) {
       </div>
 
       <div>
-        <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-zinc-500">
+        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-zinc-500">
           Review items
         </h2>
         <ul className="flex flex-col gap-3">
           {items.map((item) => (
             <li
               key={item.index}
-              className="rounded border border-zinc-200 p-3 text-sm dark:border-zinc-800"
+              className={`rounded-xl border border-[var(--surface-border)] bg-[var(--surface)] p-3 text-sm ${itemAccent[item.status]}`}
             >
               <div className="flex flex-wrap items-center gap-2">
                 <span className="font-medium capitalize">{item.name}</span>
                 {item.manuallyEntered ? (
-                  <span className="rounded bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-800 dark:bg-blue-950 dark:text-blue-300">
-                    manually entered
-                  </span>
+                  <span className={badgeStyles.manual}>manually entered</span>
                 ) : item.status === "computed" ? (
-                  <span className="rounded bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800 dark:bg-green-950 dark:text-green-300">
+                  <span className={badgeStyles.matched}>
                     matched{item.matchedName ? `: ${item.matchedName}` : ""}
                   </span>
                 ) : item.status === "unresolved_item" ? (
-                  <span className="rounded bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800 dark:bg-amber-950 dark:text-amber-300">
-                    not in knowledge base
-                  </span>
+                  <span className={badgeStyles.warning}>not in knowledge base</span>
                 ) : (
-                  <span className="rounded bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800 dark:bg-amber-950 dark:text-amber-300">
-                    needs a gram quantity
-                  </span>
+                  <span className={badgeStyles.warning}>needs a gram quantity</span>
                 )}
                 {item.conflicts.length > 0 && (
-                  <span className="rounded bg-red-100 px-2 py-0.5 text-xs font-medium text-red-800 dark:bg-red-950 dark:text-red-300">
+                  <span className={badgeStyles.conflict}>
                     conflicts with: {item.conflicts.join(", ")}
                   </span>
                 )}
               </div>
 
-              <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
+              <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
                 <label className="text-xs text-zinc-500">
                   Quantity
                   <input
                     type="number"
                     value={item.quantity ?? ""}
                     onChange={(e) => updateQuantity(item.index, e.target.value)}
-                    className="mt-0.5 w-full rounded border border-zinc-300 px-2 py-1 text-sm dark:border-zinc-700 dark:bg-zinc-900"
+                    className={`${inputClass} mt-0.5 py-1`}
                   />
                 </label>
                 <label className="text-xs text-zinc-500">
@@ -275,7 +289,7 @@ export function MealReview({ draft }: { draft: MealDraft }) {
                     type="text"
                     value={item.unit ?? ""}
                     onChange={(e) => updateUnit(item.index, e.target.value)}
-                    className="mt-0.5 w-full rounded border border-zinc-300 px-2 py-1 text-sm dark:border-zinc-700 dark:bg-zinc-900"
+                    className={`${inputClass} mt-0.5 py-1`}
                   />
                 </label>
                 <label className="col-span-2 text-xs text-zinc-500">
@@ -284,7 +298,7 @@ export function MealReview({ draft }: { draft: MealDraft }) {
                     type="text"
                     value={item.preparationMethod ?? ""}
                     onChange={(e) => updatePreparation(item.index, e.target.value)}
-                    className="mt-0.5 w-full rounded border border-zinc-300 px-2 py-1 text-sm dark:border-zinc-700 dark:bg-zinc-900"
+                    className={`${inputClass} mt-0.5 py-1`}
                   />
                 </label>
               </div>
@@ -296,7 +310,7 @@ export function MealReview({ draft }: { draft: MealDraft }) {
                     type="number"
                     value={item.calories}
                     onChange={(e) => updateMacro(item.index, "calories", e.target.value)}
-                    className="mt-0.5 w-full rounded border border-zinc-300 px-2 py-1 text-sm dark:border-zinc-700 dark:bg-zinc-900"
+                    className={`${inputClass} mt-0.5 py-1`}
                   />
                 </label>
                 <label className="text-xs text-zinc-500">
@@ -305,7 +319,7 @@ export function MealReview({ draft }: { draft: MealDraft }) {
                     type="number"
                     value={item.proteinG}
                     onChange={(e) => updateMacro(item.index, "proteinG", e.target.value)}
-                    className="mt-0.5 w-full rounded border border-zinc-300 px-2 py-1 text-sm dark:border-zinc-700 dark:bg-zinc-900"
+                    className={`${inputClass} mt-0.5 py-1`}
                   />
                 </label>
                 <label className="text-xs text-zinc-500">
@@ -314,7 +328,7 @@ export function MealReview({ draft }: { draft: MealDraft }) {
                     type="number"
                     value={item.carbsG}
                     onChange={(e) => updateMacro(item.index, "carbsG", e.target.value)}
-                    className="mt-0.5 w-full rounded border border-zinc-300 px-2 py-1 text-sm dark:border-zinc-700 dark:bg-zinc-900"
+                    className={`${inputClass} mt-0.5 py-1`}
                   />
                 </label>
                 <label className="text-xs text-zinc-500">
@@ -323,7 +337,7 @@ export function MealReview({ draft }: { draft: MealDraft }) {
                     type="number"
                     value={item.fatG}
                     onChange={(e) => updateMacro(item.index, "fatG", e.target.value)}
-                    className="mt-0.5 w-full rounded border border-zinc-300 px-2 py-1 text-sm dark:border-zinc-700 dark:bg-zinc-900"
+                    className={`${inputClass} mt-0.5 py-1`}
                   />
                 </label>
               </div>
@@ -333,12 +347,10 @@ export function MealReview({ draft }: { draft: MealDraft }) {
       </div>
 
       {draft.clarifications.length > 0 && (
-        <div>
-          <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-zinc-500">
+        <div className="rounded-xl border border-amber-200 bg-amber-50/60 p-4 dark:border-amber-900 dark:bg-amber-950/30">
+          <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-amber-800 dark:text-amber-300">
             Clarifications needed{" "}
-            <span className="font-normal normal-case text-amber-700 dark:text-amber-400">
-              (must answer before confirming)
-            </span>
+            <span className="font-normal normal-case">(must answer before confirming)</span>
           </h2>
           <ul className="flex flex-col gap-2 text-sm">
             {draft.clarifications.map((c, i) => (
@@ -353,7 +365,7 @@ export function MealReview({ draft }: { draft: MealDraft }) {
                     onChange={(e) =>
                       answerQuantityClarification(c.item_index, e.target.value)
                     }
-                    className="mt-1 w-40 rounded border border-zinc-300 px-2 py-1 text-sm dark:border-zinc-700 dark:bg-zinc-900"
+                    className={`${inputClass} mt-1 w-40 py-1`}
                   />
                 ) : (
                   <input
@@ -362,7 +374,7 @@ export function MealReview({ draft }: { draft: MealDraft }) {
                     onChange={(e) =>
                       answerPreparationClarification(c.item_index, e.target.value)
                     }
-                    className="mt-1 w-56 rounded border border-zinc-300 px-2 py-1 text-sm dark:border-zinc-700 dark:bg-zinc-900"
+                    className={`${inputClass} mt-1 w-56 py-1`}
                   />
                 )}
               </li>
@@ -384,8 +396,8 @@ export function MealReview({ draft }: { draft: MealDraft }) {
         </div>
       )}
 
-      <div className="border-t border-zinc-200 pt-3 text-sm dark:border-zinc-800">
-        <p className="font-medium">
+      <div className="rounded-xl bg-[var(--brand-soft)]/40 p-4 text-sm">
+        <p className="font-semibold">
           {totals.calories.toFixed(2)} kcal · {totals.proteinG.toFixed(2)}g
           protein · {totals.carbsG.toFixed(2)}g carbs · {totals.fatG.toFixed(2)}g
           fat
@@ -414,7 +426,7 @@ export function MealReview({ draft }: { draft: MealDraft }) {
         type="button"
         onClick={handleConfirm}
         disabled={!canConfirm}
-        className="self-start rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white disabled:opacity-50 dark:bg-zinc-50 dark:text-zinc-900"
+        className={`${primaryButtonClass} self-start`}
       >
         {confirmState.status === "pending" ? "Saving..." : "Confirm and save"}
       </button>
