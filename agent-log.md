@@ -188,3 +188,40 @@ Format per entry: what happened, what was wrong, why, what I did instead.
   to 0.18.1, which is far more dangerous than the advisories themselves. Left as-is and
   documented in the README rather than force-applying a fix that breaks the pinned
   stack — a reviewed, intentional decision, not an oversight.
+
+## Post-Module-10 — Full QA pass against the assignment text
+- User asked for a senior-tester-style review against the actual assignment
+  requirements, not just "does it look done." Went through requirement by
+  requirement with evidence, not memory:
+  - Re-audited git history + tracked files for secrets (still clean after all
+    the UI/doc commits since Module 9's audit).
+  - Diffed every `process.env.X` read in source against `.env.example` — found
+    `LOG_LEVEL` (lib/logger.ts) was read in code but undocumented. Added it as
+    an optional var.
+  - Found the real gap: `lib/nutrition/restrictions.ts` (findConflicts —
+    allergy/avoid-food safety check), `lib/meal/draft.ts` (buildMealDraft),
+    and `lib/meal-plan/build.ts` (buildPlanDraft) had zero direct test
+    coverage despite being the core business logic tying lookup+calculation+
+    conflict-checking together. Wrote 18 new tests across three new files
+    (56 total, up from 38). One test documents a real, previously-unexamined
+    behavior rather than hiding it: findConflicts is substring-based, so an
+    allergy to "milk" also flags "almond milk" (no actual dairy) — kept as
+    intentional (a safety check should over-flag, not under-flag) and
+    documented in README's Known Limitations instead of "fixing" it into
+    something more fragile.
+  - Ran a real smoke test against the *deployed Vercel URL* (not just
+    localhost) — submitted "150g grilled chicken breast and a medium banana"
+    through the live production app and confirmed the real Gemini call,
+    real KB match, and real math (247.5 kcal for 150g @ 165/100g; 105.02 kcal
+    for a 118g banana) all worked with zero console errors. This is the one
+    check that actually proves the assignment's "must be operational when
+    reviewed" requirement, and hadn't been done yet for the production
+    deployment specifically — all prior verification was against localhost.
+  - Verified the plan-reject flow makes no network call at all (pure client
+    state reset) — confirmed nothing can leak into the DB on reject.
+  - Considered whether "ask a clarification question when quantity/prep is
+    missing" applies to plan generation too. Concluded, and documented, that
+    it's structurally a meal-extraction concern (parsing ambiguous user text)
+    rather than a plan-generation one (the model always proposes complete
+    quantities; the user edits/reviews afterward) — a judgment call worth
+    being able to defend in the interview, not a gap.

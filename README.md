@@ -78,7 +78,7 @@ npm run db:seed      # loads data/nutrition-seed.csv into nutrition_items
 
 ```bash
 npm run dev          # http://localhost:3000
-npm test             # run the test suite (38 tests)
+npm test             # run the test suite (56 tests)
 npm run build        # production build
 ```
 
@@ -154,7 +154,7 @@ a bit of paneer           → flagged "not in knowledge base" on the review scre
 | Preserve meal history, corrections, approved plans | Append-only `meals`/`meal_items`/`meal_plans`/`meal_plan_items`; nothing is ever overwritten, only new rows added |
 | Loading / empty / validation / success / failure states | Every route has a `loading.tsx`; forms show inline validation errors, success/failure messages; dashboard has an explicit empty state |
 | Structured app + AI-workflow logs | `lib/logger.ts` (pino JSON) + `lib/observability/with-action-logging.ts` per server action; `ai_runs` table + a separate `ai_workflow` log line per model call |
-| Tests for important behavior | 38 Vitest tests — see [Tests](#tests) |
+| Tests for important behavior | 56 Vitest tests — see [Tests](#tests) |
 | Health check | `GET /api/health` — verifies real DB connectivity |
 | Deployed application | Vercel — see link above |
 
@@ -197,13 +197,16 @@ Documented here rather than left unexplained:
 npm test
 ```
 
-38 tests across 5 files:
+56 tests across 8 files:
 
 | File | Covers |
 |---|---|
 | `lib/nutrition/__tests__/lookup.test.ts` | Exact/alias/case/plural/descriptor-strip matching; genuine misses return `null` |
 | `lib/nutrition/__tests__/seed-csv.test.ts` | CSV validation fails loudly (row-numbered errors) on missing columns/non-numeric values, never silently skips a bad row |
 | `lib/nutrition/__tests__/calculate.test.ts` | Hand-checked unit conversion and totals math; unresolved items excluded from totals and flagged via `isComplete: false`, never silently zero-padded |
+| `lib/nutrition/__tests__/restrictions.test.ts` | Allergy/avoid-food conflict detection via raw name and matched KB name; documents the intentional over-flagging trade-off (e.g. "almond milk" still trips a "milk" restriction) |
+| `lib/meal/__tests__/draft.test.ts` | `buildMealDraft`: resolved-item totals, unresolved-item exclusion, conflict flagging, clarifications/assumptions passthrough |
+| `lib/meal-plan/__tests__/build.test.ts` | `buildPlanDraft`: resolved-item totals, unresolved-item exclusion, `hasConflicts` (what blocks Approve), `gapFromTarget` correctness |
 | `lib/ai/__tests__/extract.test.ts` | Mocked-Gemini coverage: clean extraction, missing-quantity clarification, ambiguous-preparation clarification, retry-then-succeed on malformed JSON, fail-after-two-attempts, rate limit, generic API error |
 | `lib/ai/__tests__/generate-plan.test.ts` | Plan generation happy path, prompt includes allergies/avoid-list/recent meals, fails gracefully on malformed output |
 
@@ -247,6 +250,23 @@ HTTP request. `AGENT_USAGE.md` has the detail on what that caught.
   one was picked for the seed. A different variant named in a meal will
   still resolve to the seeded row via alias matching, using its values as
   the closest documented match, not a perfect substitute.
+- **Allergy/avoid-food matching is substring-based and intentionally
+  over-flags rather than under-flags.** `findConflicts` (`lib/nutrition/
+  restrictions.ts`) checks whether a restriction word appears as a
+  substring of the food name — so an allergy to "milk" will also flag
+  "almond milk," a plant-based food that contains no dairy. This is a
+  deliberate trade-off, not an oversight (see the test of the same name
+  in `lib/nutrition/__tests__/restrictions.test.ts`): for a safety-relevant
+  check like allergies, a false positive the user has to dismiss is far
+  less costly than a false negative that misses a real allergen.
+- **Plan generation doesn't ask clarification questions.** Meal
+  *extraction* asks the user for a missing quantity/preparation method
+  because it's parsing genuinely ambiguous user text. Meal-*plan*
+  generation is the reverse direction — the model is proposing complete
+  meals, always with a concrete quantity — so there's nothing from the
+  user to disambiguate before generating; the user reviews and edits the
+  proposal afterward instead. The "ask a clarification question" spec
+  requirement is met by the extraction workflow.
 
 ## Substitutions from the original spec
 
