@@ -1,6 +1,6 @@
 # Nutrition knowledge base — `nutrition-seed.csv`
 
-87 whole foods and common ingredients, retrieved from the
+88 whole foods and common ingredients, retrieved from the
 [USDA FoodData Central](https://fdc.nal.usda.gov/) API (SR Legacy dataset),
 covering fruits, vegetables, grains/breads, proteins, dairy, fats, legumes,
 nuts/seeds, and a few common staples (sugar, honey, chocolate, tea, juice).
@@ -37,7 +37,7 @@ nutrition numbers are retrieved from a documented source, never invented.
   "low-fat mozzarella" vs. the seeded "whole milk mozzarella") will still
   resolve to the seeded row via alias matching, using its values as the
   closest documented match — not a perfect substitute.
-- **~87 items, not exhaustive.** This is intentionally a *small, documented*
+- **~88 items, not exhaustive.** This is intentionally a *small, documented*
   knowledge base per the assignment brief, not a full food database. A food
   not in this list is surfaced as **unresolved** in the meal review screen
   rather than estimated — this is the intended fallback behavior, not a bug.
