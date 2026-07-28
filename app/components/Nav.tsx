@@ -35,12 +35,15 @@ export function Nav() {
 
   return (
     <nav className="sticky top-0 z-10 border-b border-[var(--surface-border)] bg-[var(--surface)]/80 backdrop-blur-sm">
-      <div className="mx-auto flex max-w-3xl items-center gap-6 px-4 py-3">
-        <Link href="/" className="flex items-center gap-2 font-semibold tracking-tight">
+      <div className="mx-auto flex max-w-3xl items-center gap-3 px-4 py-3 sm:gap-6">
+        <Link
+          href="/"
+          className="flex shrink-0 items-center gap-2 font-semibold tracking-tight"
+        >
           <LogoMark />
-          <span>Nutrition Planner</span>
+          <span className="hidden sm:inline">Nutrition Planner</span>
         </Link>
-        <div className="flex gap-1 text-sm">
+        <div className="flex min-w-0 gap-1 overflow-x-auto text-sm">
           {LINKS.map((link) => {
             const active = pathname?.startsWith(link.href);
             return (
@@ -49,8 +52,8 @@ export function Nav() {
                 href={link.href}
                 className={
                   active
-                    ? "rounded-full bg-[var(--brand-soft)] px-3 py-1.5 font-medium text-[var(--brand-strong)]"
-                    : "rounded-full px-3 py-1.5 text-zinc-600 hover:bg-[var(--brand-soft)]/60 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-50"
+                    ? "shrink-0 whitespace-nowrap rounded-full bg-[var(--brand-soft)] px-3 py-1.5 font-medium text-[var(--brand-strong)]"
+                    : "shrink-0 whitespace-nowrap rounded-full px-3 py-1.5 text-zinc-600 hover:bg-[var(--brand-soft)]/60 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-50"
                 }
               >
                 {link.label}
