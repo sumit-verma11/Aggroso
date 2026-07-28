@@ -1,6 +1,7 @@
 import { randomUUID } from "crypto";
+import { and, asc, eq, gte, inArray, lte } from "drizzle-orm";
 import { db } from "./index";
-import { meals, mealItems, mealTypeValues } from "./schema";
+import { meals, mealItems, nutritionItems, mealTypeValues } from "./schema";
 
 export type MealType = (typeof mealTypeValues)[number];
 
@@ -81,4 +82,90 @@ export async function saveMeal(input: ConfirmMealInput) {
 
   await db.batch([insertMeal, insertItems]);
   return { id: mealId };
+}
+
+export interface MealItemDetail {
+  id: string;
+  rawExtractedName: string;
+  quantity: number;
+  unit: string;
+  preparationMethod: string | null;
+  calories: number;
+  proteinG: number;
+  carbsG: number;
+  fatG: number;
+  wasCorrected: boolean;
+  matchedName: string | null;
+  source: string | null;
+}
+
+export interface MealWithItems {
+  id: string;
+  mealType: MealType;
+  loggedAt: Date;
+  rawText: string;
+  totalCalories: number;
+  totalProteinG: number;
+  totalCarbsG: number;
+  totalFatG: number;
+  items: MealItemDetail[];
+}
+
+// Reads back only the values stored at confirm time — nothing here is
+// recomputed or re-queried against the AI. Date is treated as a UTC
+// calendar day since the profile has no stored timezone.
+export async function getMealsForDate(
+  profileId: string,
+  date: string
+): Promise<MealWithItems[]> {
+  const dayStart = new Date(`${date}T00:00:00.000Z`);
+  const dayEnd = new Date(`${date}T23:59:59.999Z`);
+
+  const mealRows = await db
+    .select()
+    .from(meals)
+    .where(
+      and(
+        eq(meals.profileId, profileId),
+        gte(meals.loggedAt, dayStart),
+        lte(meals.loggedAt, dayEnd)
+      )
+    )
+    .orderBy(asc(meals.loggedAt));
+
+  if (mealRows.length === 0) return [];
+
+  const mealIds = mealRows.map((m) => m.id);
+  const itemRows = await db
+    .select({ item: mealItems, nutritionItem: nutritionItems })
+    .from(mealItems)
+    .leftJoin(nutritionItems, eq(mealItems.nutritionItemId, nutritionItems.id))
+    .where(inArray(mealItems.mealId, mealIds));
+
+  return mealRows.map((meal) => ({
+    id: meal.id,
+    mealType: meal.mealType as MealType,
+    loggedAt: meal.loggedAt,
+    rawText: meal.rawText,
+    totalCalories: meal.totalCalories,
+    totalProteinG: meal.totalProteinG,
+    totalCarbsG: meal.totalCarbsG,
+    totalFatG: meal.totalFatG,
+    items: itemRows
+      .filter((row) => row.item.mealId === meal.id)
+      .map((row) => ({
+        id: row.item.id,
+        rawExtractedName: row.item.rawExtractedName,
+        quantity: row.item.quantity,
+        unit: row.item.unit,
+        preparationMethod: row.item.preparationMethod,
+        calories: row.item.calories,
+        proteinG: row.item.proteinG,
+        carbsG: row.item.carbsG,
+        fatG: row.item.fatG,
+        wasCorrected: row.item.wasCorrected,
+        matchedName: row.nutritionItem?.canonicalName ?? null,
+        source: row.nutritionItem?.source ?? null,
+      })),
+  }));
 }
