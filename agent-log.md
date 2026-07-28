@@ -156,3 +156,35 @@ Format per entry: what happened, what was wrong, why, what I did instead.
   trusted) → approve → persisted → reload correctly shows the read-only approved view
   instead of the generator, with per-item source citations and the calorie gap vs.
   target (-698 kcal) shown plainly rather than hidden.
+
+## Module 9 — Observability, hardening, secrets audit
+- Added pino for structured logs (lib/logger.ts), a withActionLogging() wrapper around
+  every server action (requestId/route/durationMs/status), a global error boundary
+  (app/error.tsx + app/global-error.tsx for root-layout failures), and a health check
+  (app/api/health) that does a real `select 1` against Neon rather than just returning
+  200 unconditionally.
+- Configured pino with a `transport: { target: "pino-pretty" }` for readable dev
+  output first. Live-triggering an actual logged action (not just building/typechecking)
+  crashed the dev server outright: `uncaughtException: Error: the worker has exited`,
+  thrown from inside the logger.info() call. pino-pretty's transport spawns a worker
+  thread, which doesn't survive being bundled into Next.js's server runtime. This
+  would not have been caught by `next build` or the unit tests — it only surfaced when
+  an action actually ran end-to-end. Fixed by dropping pino-pretty entirely and always
+  emitting plain JSON (which is the actual graded requirement anyway — structured,
+  parseable log lines — not human-friendly colorized output), and uninstalled the
+  now-unused dependency. Re-verified by actually triggering saveProfile and the
+  extraction workflow and confirming clean JSON log lines with no crash.
+- Secrets audit: grepped the full git history (`git log --all -p`) and every currently
+  tracked file for the literal Gemini and Neon credential values — no matches.
+  Confirmed .env.local was never committed (`git log --all --oneline -- .env.local`
+  returns nothing) and is properly gitignored. Confirmed .env.example lists both
+  required variables with empty values. Confirmed GEMINI_API_KEY/DATABASE_URL are only
+  ever read via `process.env.X`, never interpolated into a log statement or any other
+  string anywhere in the codebase.
+- Ran `npm audit`: 16 vulnerabilities, all in dev-only build tooling transitively
+  pulled in by eslint (minimatch), drizzle-kit (esbuild's dev-server), and Next's own
+  bundled postcss/sharp — none reachable from the deployed production runtime.
+  `npm audit fix --force` would downgrade next from 15.5.22 to 9.3.3 and drizzle-kit
+  to 0.18.1, which is far more dangerous than the advisories themselves. Left as-is and
+  documented in the README rather than force-applying a fix that breaks the pinned
+  stack — a reviewed, intentional decision, not an oversight.

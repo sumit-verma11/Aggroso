@@ -1,5 +1,6 @@
 import { createHash } from "crypto";
 import { db } from "../db";
+import { logger } from "../logger";
 import { aiRuns, type aiRunStatusValues, type aiRunWorkflowValues } from "../db/schema";
 
 export interface AiRunEntry {
@@ -19,6 +20,23 @@ export function hashPrompt(prompt: string): string {
 }
 
 export async function recordAiRun(entry: AiRunEntry): Promise<void> {
+  // Structured stdout line for the "ai_workflow" log stream — workflow,
+  // model, latency, tokens, outcome only. The full prompt/response text
+  // (which can contain user-submitted meal descriptions) goes to the
+  // ai_runs table below for audit purposes, never to stdout.
+  logger.info(
+    {
+      type: "ai_workflow",
+      workflow: entry.workflow,
+      model: entry.model,
+      latencyMs: entry.latencyMs,
+      inputTokens: entry.inputTokens,
+      outputTokens: entry.outputTokens,
+      status: entry.status,
+    },
+    "ai_workflow run"
+  );
+
   await db.insert(aiRuns).values({
     workflow: entry.workflow,
     model: entry.model,

@@ -3,6 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { upsertProfile } from "@/lib/db/profiles";
 import { profileFormSchema, splitList } from "@/lib/validation/profile";
+import { withActionLogging } from "@/lib/observability/with-action-logging";
+import { logger } from "@/lib/logger";
 
 export interface SubmittedProfileValues {
   calorieTarget: string;
@@ -28,40 +30,43 @@ export async function saveProfile(
   _prevState: ProfileActionState,
   formData: FormData
 ): Promise<ProfileActionState> {
-  const submitted: SubmittedProfileValues = {
-    calorieTarget: String(formData.get("calorieTarget") ?? ""),
-    dietaryPreferences: String(formData.get("dietaryPreferences") ?? ""),
-    allergies: String(formData.get("allergies") ?? ""),
-    avoidFoods: String(formData.get("avoidFoods") ?? ""),
-  };
-
-  const parsed = profileFormSchema.safeParse(submitted);
-
-  if (!parsed.success) {
-    return {
-      status: "error",
-      errors: parsed.error.flatten().fieldErrors,
-      message: "Please fix the errors below.",
-      values: submitted,
+  return withActionLogging("saveProfile", async () => {
+    const submitted: SubmittedProfileValues = {
+      calorieTarget: String(formData.get("calorieTarget") ?? ""),
+      dietaryPreferences: String(formData.get("dietaryPreferences") ?? ""),
+      allergies: String(formData.get("allergies") ?? ""),
+      avoidFoods: String(formData.get("avoidFoods") ?? ""),
     };
-  }
 
-  try {
-    await upsertProfile({
-      calorieTarget: parsed.data.calorieTarget,
-      dietaryPreferences: splitList(parsed.data.dietaryPreferences),
-      allergies: splitList(parsed.data.allergies),
-      avoidFoods: splitList(parsed.data.avoidFoods),
-    });
-  } catch {
-    return {
-      status: "error",
-      message: "Something went wrong saving your profile. Please try again.",
-      values: submitted,
-    };
-  }
+    const parsed = profileFormSchema.safeParse(submitted);
 
-  revalidatePath("/profile");
-  revalidatePath("/");
-  return { status: "success", message: "Profile saved." };
+    if (!parsed.success) {
+      return {
+        status: "error",
+        errors: parsed.error.flatten().fieldErrors,
+        message: "Please fix the errors below.",
+        values: submitted,
+      };
+    }
+
+    try {
+      await upsertProfile({
+        calorieTarget: parsed.data.calorieTarget,
+        dietaryPreferences: splitList(parsed.data.dietaryPreferences),
+        allergies: splitList(parsed.data.allergies),
+        avoidFoods: splitList(parsed.data.avoidFoods),
+      });
+    } catch (err) {
+      logger.error({ route: "saveProfile", error: String(err) }, "db write failed");
+      return {
+        status: "error",
+        message: "Something went wrong saving your profile. Please try again.",
+        values: submitted,
+      };
+    }
+
+    revalidatePath("/profile");
+    revalidatePath("/");
+    return { status: "success", message: "Profile saved." };
+  });
 }
