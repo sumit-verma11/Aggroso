@@ -121,3 +121,38 @@ Format per entry: what happened, what was wrong, why, what I did instead.
   `wasCorrected: false`, the manual item's `ai_calories: 0` (nothing was ever computed)
   against `calories: 60` with `wasCorrected: true`, and the meal's stored totals
   matching the sum by hand.
+
+## Module 8 — Meal plan generation + approval
+- Extracted lib/ai/run-json-workflow.ts out of extract.ts before writing a second AI
+  workflow (plan generation) — the retry/Zod-validate/ai_runs-logging pipeline would
+  otherwise have been duplicated wholesale between the two. extract.ts and
+  generate-plan.ts are now each ~30 lines of prompt-building; the shared ~120-line
+  pipeline lives once. Ran the full existing test suite after the refactor before
+  writing anything new — all 31 tests still passed unchanged, confirming the
+  extraction behavior wasn't altered.
+- Live-tested generation end-to-end (real Gemini, real Neon) and found a real gap:
+  several proposed items ("Cooked Lentils", "Steamed Broccoli", "Cooked Quinoa") came
+  back "not resolved" even though the knowledge base has plain "Lentils" / "Broccoli" /
+  "Quinoa" — meal-plan generation folds the preparation method into the food name
+  itself (unlike meal extraction, which has a separate preparation_method field), and
+  the lookup's exact/alias/normalized-plural matching had no tier for that. Fixed by
+  adding one more deterministic matching tier: strip a small, fixed, explicitly-listed
+  set of preparation/cut words (cooked, steamed, roasted, chopped, sliced, diced,
+  florets, etc.) from both sides before re-matching. This is not the fuzzy/edit-
+  distance matching Module 3 deliberately ruled out — it's a fixed word-list strip,
+  and a genuine miss (e.g. "Cooked Brown Rice" — there's no brown rice in this KB)
+  still correctly returns unresolved rather than guessing at a near match.
+- Also found and fixed one real content gap this exposed: the Tofu row's aliases only
+  covered "fried tofu", so "Pan-seared Tofu" and even generic "Tofu" had no path to
+  match despite the food being in the KB. Added a bare "tofu" alias and re-ran
+  db:seed. (Re-running db:seed deletes and reinserts nutrition_items — meal_items.
+  nutritionItemId is ON DELETE SET NULL, so any meal logged before a reseed loses its
+  "source:" citation link, though its stored calorie/macro values are unaffected. Only
+  matters during active development against a live DB; noting it here rather than
+  re-engineering the seed script's upsert strategy under time pressure.)
+- Re-verified live after both fixes: generation → edit → allergy/avoid-conflict check
+  (none triggered, since the model correctly avoided the profile's stated peanuts/
+  cilantro on its own — still independently re-checked in code on approve, not
+  trusted) → approve → persisted → reload correctly shows the read-only approved view
+  instead of the generator, with per-item source citations and the calorie gap vs.
+  target (-698 kcal) shown plainly rather than hidden.

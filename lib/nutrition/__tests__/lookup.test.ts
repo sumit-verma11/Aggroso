@@ -31,6 +31,38 @@ describe("resolveFood", () => {
   it("returns null on an empty string", () => {
     expect(resolveFood("   ", items)).toBeNull();
   });
+
+  it("resolves a name with a leading preparation-method word stripped", () => {
+    // Meal-plan generation folds prep method into the name itself
+    // ("Cooked Lentils") rather than a separate field like meal extraction
+    // does — the descriptor-strip tier exists for exactly this case.
+    const lentilItems: LookupItem[] = [
+      { id: "4", canonicalName: "Lentils", aliases: ["lentil"] },
+    ];
+    expect(resolveFood("Cooked Lentils", lentilItems)?.id).toBe("4");
+    expect(resolveFood("Steamed Broccoli", [
+      { id: "5", canonicalName: "Broccoli", aliases: [] },
+    ])?.id).toBe("5");
+  });
+
+  it("does not strip a descriptor word that's part of the only match available", () => {
+    // "White rice, cooked" legitimately contains "cooked" as part of its
+    // canonical name — stripping descriptors from both sides still finds it.
+    expect(resolveFood("Cooked White Rice", items)?.id).toBe("2");
+  });
+
+  it("still returns null when descriptor-stripping doesn't yield a match", () => {
+    expect(resolveFood("Cooked Brown Rice", items)).toBeNull();
+  });
+
+  it("strips chopped/sliced/diced/minced/florets the same way", () => {
+    expect(resolveFood("Chopped Tomato", [
+      { id: "6", canonicalName: "Tomato", aliases: [] },
+    ])?.id).toBe("6");
+    expect(resolveFood("Broccoli Florets", [
+      { id: "7", canonicalName: "Broccoli", aliases: [] },
+    ])?.id).toBe("7");
+  });
 });
 
 describe("normalizeFoodName", () => {

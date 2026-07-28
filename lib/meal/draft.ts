@@ -1,5 +1,6 @@
-import { resolveFood, normalizeFoodName } from "../nutrition/lookup";
+import { resolveFood } from "../nutrition/lookup";
 import { computeItem, type NutritionValues } from "../nutrition/calculate";
+import { findConflicts } from "../nutrition/restrictions";
 import type { ExtractionResult } from "../ai/schema";
 import type { NutritionItemRow } from "../db/nutrition-items";
 
@@ -37,23 +38,6 @@ export interface MealDraft {
     fatG: number;
     isComplete: boolean;
   };
-}
-
-function findConflicts(
-  itemName: string,
-  matchedName: string | null,
-  restrictions: string[]
-): string[] {
-  if (restrictions.length === 0) return [];
-  const targets = [itemName, matchedName]
-    .filter(Boolean)
-    .map((n) => normalizeFoodName(n as string));
-  return restrictions.filter((restriction) => {
-    const normalizedRestriction = normalizeFoodName(restriction);
-    return targets.some(
-      (t) => t.includes(normalizedRestriction) || normalizedRestriction.includes(t)
-    );
-  });
 }
 
 export function buildMealDraft(

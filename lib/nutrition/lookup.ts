@@ -21,10 +21,48 @@ export function normalizeFoodName(name: string): string {
   return trimmed;
 }
 
+// Fixed, explicit list of preparation-method words — not a fuzzy/edit-
+// distance dictionary. When an AI-generated name folds a preparation method
+// into the food name itself (meal-plan generation does this: "Cooked
+// Lentils", "Steamed Broccoli"), stripping these lets it match the KB's
+// plain "Lentils" / "Broccoli" instead of staying unresolved over an
+// adjective. A genuine miss (a food that's actually absent) still returns
+// null — this only strips known descriptor words, it doesn't guess at typos
+// or near-matches.
+const DESCRIPTOR_WORDS = new Set([
+  "cooked",
+  "raw",
+  "steamed",
+  "sauteed",
+  "sautéed",
+  "roasted",
+  "grilled",
+  "boiled",
+  "baked",
+  "fried",
+  "pan-seared",
+  "seared",
+  "poached",
+  "scrambled",
+  "toasted",
+  "chopped",
+  "sliced",
+  "diced",
+  "minced",
+  "florets",
+]);
+
+function stripDescriptors(name: string): string {
+  const words = name.trim().toLowerCase().split(/\s+/);
+  const filtered = words.filter((w) => !DESCRIPTOR_WORDS.has(w));
+  return filtered.length > 0 ? filtered.join(" ") : name.trim().toLowerCase();
+}
+
 /**
  * Resolves a raw extracted food name to a knowledge-base item.
- * Tries, in order: exact match, alias match, normalized match.
- * Returns null (unresolved) rather than a best guess on a genuine miss.
+ * Tries, in order: exact match, alias match, normalized match, then a
+ * descriptor-stripped normalized match. Returns null (unresolved) rather
+ * than a best guess on a genuine miss.
  */
 export function resolveFood<T extends LookupItem>(
   rawName: string,
@@ -48,6 +86,20 @@ export function resolveFood<T extends LookupItem>(
     const candidates = [item.canonicalName, ...item.aliases];
     if (candidates.some((c) => normalizeFoodName(c) === normalizedTarget)) {
       return item;
+    }
+  }
+
+  const strippedTarget = normalizeFoodName(stripDescriptors(rawName));
+  if (strippedTarget !== normalizedTarget) {
+    for (const item of items) {
+      const candidates = [item.canonicalName, ...item.aliases];
+      if (
+        candidates.some(
+          (c) => normalizeFoodName(stripDescriptors(c)) === strippedTarget
+        )
+      ) {
+        return item;
+      }
     }
   }
 
