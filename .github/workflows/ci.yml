@@ -17,7 +17,12 @@ jobs:
           node-version: 20
           cache: npm
 
-      - run: npm ci
+      # Not `npm ci`: this project's lockfile has esbuild's optional
+      # platform-specific binaries (pulled in transitively via drizzle-kit's
+      # toolchain), and `npm ci` has a known bug where it errors on
+      # unsupported-platform optional deps instead of skipping them —
+      # reproduced locally, not CI-specific. `npm install` handles it fine.
+      - run: npm install
 
       - name: Run tests
         run: npm test
