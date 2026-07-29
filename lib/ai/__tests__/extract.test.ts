@@ -212,4 +212,22 @@ describe("extractMeal", () => {
     expect(promptSent).toMatch(/large/);
     expect(promptSent).toMatch(/does NOT apply to "medium"/i);
   });
+
+  // Same reasoning as the size-adjective test above: a bare plural with no
+  // count ("oranges") is a distinct ambiguity from "a large orange" — the
+  // count itself is unknown, not just the weight — so it needs its own
+  // explicit instruction rather than relying on the model's judgment of
+  // what counts as "genuinely ambiguous" under the general fallback rule.
+  it("instructs the model to ask for a bare-plural item's count rather than assume one", async () => {
+    generateContentMock.mockResolvedValueOnce(
+      geminiResponse({ items: [], clarifications_needed: [], assumptions: [] })
+    );
+
+    await extractMeal("I had oranges and toast");
+
+    const promptSent = generateContentMock.mock.calls[0][0].contents;
+    expect(promptSent).toMatch(/bare plural/i);
+    expect(promptSent).toMatch(/do NOT assume a default count/i);
+    expect(promptSent).toMatch(/unqualified SINGULAR mention/i);
+  });
 });

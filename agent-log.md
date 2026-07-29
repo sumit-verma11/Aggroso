@@ -340,3 +340,26 @@ Format per entry: what happened, what was wrong, why, what I did instead.
 - Full suite green (67/67), clean production build unaffected (no schema
   change — clarifications still use the existing "quantity" field, just a
   new trigger condition in the prompt).
+
+## Bare-plural-with-no-count clarification ("what if someone just types 'oranges'?")
+- Follow-up to the size-adjective fix: user asked what happens for a bare
+  plural food mention with literally no count or article ("I had oranges
+  and toast"). This is a distinct ambiguity from "a large orange" — there
+  the weight-per-item was unknown; here the *count* itself is unknown, and
+  nothing in the existing prompt explicitly told the model this must always
+  be a clarification rather than a silently guessed default count (e.g.
+  quietly assuming "3 oranges").
+- Added an explicit prompt rule 4 (`lib/ai/extract.ts`) requiring a
+  "quantity" clarification for any bare plural with no explicit count/
+  article/quantity anywhere in the text, while explicitly carving out an
+  unqualified SINGULAR mention ("an orange") — that's unambiguous (exactly
+  one) and keeps the rule 2 standard-weight assumption. Renumbered the
+  remaining rules (ambiguous-other -> 5, prep -> 6, JSON-only -> 7).
+- Added a test (same pattern as the size-adjective test) asserting the
+  actual prompt text sent to the model contains this instruction and its
+  singular carve-out — again, locking in the prompt-authoring decision
+  since model judgment itself can't be asserted on in a mocked test.
+- Updated README's meal-format docs (new bullet + example) and bumped rule
+  numbers / test count (68 tests / 9 files) to match.
+- Full suite green (68/68), clean production build unaffected (prompt-only
+  change, same "quantity" clarification field already in the schema).

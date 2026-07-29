@@ -78,7 +78,7 @@ npm run db:seed      # loads data/nutrition-seed.csv into nutrition_items
 
 ```bash
 npm run dev          # http://localhost:3000
-npm test             # run the test suite (67 tests)
+npm test             # run the test suite (68 tests)
 npm run build        # production build
 ```
 
@@ -112,6 +112,11 @@ prompt is built against — not a guess at what might work.
   doesn't apply to "medium" or an unqualified mention ("a banana", "a
   medium banana"), which still get a standard-weight assumption as above.
   State the weight yourself ("1 large orange, 250g") to skip the question.
+- **Bare plurals with no count** ("I had **oranges** and toast") also
+  trigger a clarification asking how many/how much — the count itself is
+  unknown here, not just the weight, so no default is assumed. An
+  unqualified **singular** mention ("an orange") is unambiguous (exactly
+  one) and still gets the standard-weight assumption.
 - **Preparation method** is optional, but omitting it for a food where
   preparation materially changes the calorie count (fried vs. boiled vs.
   raw) also triggers a clarification question rather than an assumption.
@@ -136,6 +141,7 @@ different, deliberate mechanisms):
 some rice and chicken     → clarification question: no quantity stated for either item
 grilled chicken           → clarification question: quantity missing
 a large orange            → clarification question: "large" has no reliable default weight
+oranges (no count stated) → clarification question: bare plural, count unknown
 a bit of paneer           → flagged "not in knowledge base" on the review screen
                              (paneer isn't one of the 88 seeded foods — see data/README.md);
                              the item can still be saved by entering its nutrition
@@ -154,7 +160,7 @@ a bit of paneer           → flagged "not in knowledge base" on the review scre
 | Generate + review a next-day meal plan | `app/plan` |
 | Edit, approve, or reject the generated plan | `app/plan/PlanGenerator` |
 | Extract structured food data from free text | `lib/ai/extract.ts` |
-| Ask a clarification question when quantity/prep is missing and matters | Extraction prompt rules 3-5 (size adjective, ambiguous quantity, ambiguous prep); required inputs in `MealReview` before Confirm |
+| Ask a clarification question when quantity/prep is missing and matters | Extraction prompt rules 3-6 (size adjective, bare plural/no count, ambiguous quantity, ambiguous prep); required inputs in `MealReview` before Confirm |
 | Retrieve nutrition from a documented knowledge base, not invented | `data/nutrition-seed.csv` (real USDA FoodData Central values) + `lib/nutrition/lookup.ts` |
 | Show assumptions/uncertainty | `assumptions` array rendered per meal/plan; unresolved items visibly flagged, never silently zeroed into a "complete" total (`isComplete` flag) |
 | Meal plan follows saved preferences/restrictions | Profile allergies/avoid-list passed into the generation prompt **and** independently re-checked in code on approve (never trusted from the model alone) |
@@ -162,7 +168,7 @@ a bit of paneer           → flagged "not in knowledge base" on the review scre
 | Preserve meal history, corrections, approved plans | Append-only `meals`/`meal_items`/`meal_plans`/`meal_plan_items`; nothing is ever overwritten, only new rows added |
 | Loading / empty / validation / success / failure states | Every route has a `loading.tsx`; forms show inline validation errors, success/failure messages; dashboard has an explicit empty state |
 | Structured app + AI-workflow logs | `lib/logger.ts` (pino JSON) + `lib/observability/with-action-logging.ts` per server action; `ai_runs` table + a separate `ai_workflow` log line per model call |
-| Tests for important behavior | 67 Vitest tests — see [Tests](#tests) |
+| Tests for important behavior | 68 Vitest tests — see [Tests](#tests) |
 | Health check | `GET /api/health` — verifies real DB connectivity |
 | Deployed application | Vercel — see link above |
 | CI (test/lint/build gated on push) | `.github/workflows/ci.yml` — see [CI](#ci) |
@@ -208,7 +214,7 @@ Documented here rather than left unexplained:
 npm test
 ```
 
-67 tests across 9 files:
+68 tests across 9 files:
 
 | File | Covers |
 |---|---|
@@ -312,7 +318,7 @@ DATABASE_URL="<production connection string>" npm run db:seed
 ## CI
 
 `.github/workflows/ci.yml` runs on every push/PR to `main`: install, test
-(67 Vitest tests), lint, and build. The build step uses placeholder
+(68 Vitest tests), lint, and build. The build step uses placeholder
 `DATABASE_URL`/`GEMINI_API_KEY` values — not real credentials — since every
 route is `force-dynamic`, so the build never actually connects to either
 service; the placeholders only satisfy the "is this set at all" guard checks
