@@ -157,6 +157,7 @@ a bit of paneer           → flagged "not in knowledge base" on the review scre
 | Tests for important behavior | 56 Vitest tests — see [Tests](#tests) |
 | Health check | `GET /api/health` — verifies real DB connectivity |
 | Deployed application | Vercel — see link above |
+| CI (test/lint/build gated on push) | `.github/workflows/ci.yml` — see [CI](#ci) |
 
 ## Intentionally out of scope
 
@@ -298,6 +299,15 @@ DATABASE_URL="<production connection string>" npm run db:migrate
 DATABASE_URL="<production connection string>" npm run db:seed
 ```
 
+## CI
+
+`.github/workflows/ci.yml` runs on every push/PR to `main`: install, test
+(56 Vitest tests), lint, and build. The build step uses placeholder
+`DATABASE_URL`/`GEMINI_API_KEY` values — not real credentials — since every
+route is `force-dynamic`, so the build never actually connects to either
+service; the placeholders only satisfy the "is this set at all" guard checks
+in `lib/db/index.ts` and `lib/ai/gemini.ts`.
+
 ## Repository layout
 
 ```
@@ -309,6 +319,7 @@ lib/db/               Drizzle schema and query modules
 data/                 Nutrition knowledge base (CSV) + its own README
 scripts/              One-off seed script
 drizzle/              Generated SQL migration
+.github/workflows/    CI (test + lint + build on every push)
 ```
 
 See `CLAUDE.md` for the original product spec and architectural rules this
