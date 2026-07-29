@@ -4,7 +4,7 @@ A single-user wellness app: log meals in plain text, review the AI-extracted
 food items against a real nutrition database before saving, track daily
 intake against a calorie target, and generate/approve a next-day meal plan.
 
-**Live app:** _TODO — fill in after Vercel deployment_
+**Live app:** https://aggroso-psi.vercel.app
 **Repo:** https://github.com/sumit-verma11/Aggroso
 
 > This app estimates nutrition information for planning purposes only. It is
