@@ -312,3 +312,31 @@ Format per entry: what happened, what was wrong, why, what I did instead.
   values come from "a small, documented knowledge base"), not new scope. The CSV is that
   knowledge base; fixing a missing alias is the same category of work as fixing any other bug
   in required functionality, not a feature addition.
+
+## Size-adjective clarification ("what if the orange is very large?")
+- User asked what happens when a household portion carries a relative size
+  adjective ("a large orange") with no stated weight. Traced the pipeline
+  and confirmed the model was previously free to guess a reference weight
+  for ANY unqualified or size-qualified mention alike (rule 2's existing
+  behavior) — accurate for common defaults like "a medium banana" (widely
+  standardized), but "large"/"small"/"jumbo" don't have a comparably
+  reliable default across foods, so a silent guess there is a real accuracy
+  gap, not just a hypothetical.
+- Added a new prompt rule (`lib/ai/extract.ts`, now rule 3) instructing the
+  model to trigger a "quantity" clarification for any size adjective
+  (large/small/jumbo/extra-large/giant/mini) without an explicit gram/ml
+  quantity elsewhere in the text, instead of guessing — while explicitly
+  carving out "medium" and unqualified mentions, which keep the existing
+  standard-reference-weight assumption behavior from rule 2. Renumbered the
+  remaining rules (ambiguous-quantity -> 4, prep-method -> 5, JSON-only -> 6).
+- Can't unit-test actual model judgment deterministically (that's mocked in
+  every extract.test.ts case), so instead added a test that asserts the
+  *prompt sent to the model* contains the new instruction and its "medium"
+  carve-out — locks in the prompt-authoring decision, not the model's
+  response, which is the honest level this can be tested at.
+- Updated README's "Meal text input format" section with the new rule, an
+  example ("a large orange" -> clarification), and bumped the documented
+  rule numbers/test count (67 tests / 9 files) to match.
+- Full suite green (67/67), clean production build unaffected (no schema
+  change — clarifications still use the existing "quantity" field, just a
+  new trigger condition in the prompt).

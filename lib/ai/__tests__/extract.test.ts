@@ -194,4 +194,22 @@ describe("extractMeal", () => {
       expect(result.reason).toBe("model_error");
     }
   });
+
+  // Locks in the prompt-authoring decision itself, not model behavior (which
+  // can't be asserted deterministically): a relative size adjective like
+  // "large" must be instructed to trigger a clarification rather than a
+  // guessed reference weight, while "medium"/unqualified mentions still get
+  // a standard-weight estimate. See rule 2 vs rule 3 in extract.ts.
+  it("instructs the model to ask for a size-adjective item's real weight rather than guess", async () => {
+    generateContentMock.mockResolvedValueOnce(
+      geminiResponse({ items: [], clarifications_needed: [], assumptions: [] })
+    );
+
+    await extractMeal("a large orange");
+
+    const promptSent = generateContentMock.mock.calls[0][0].contents;
+    expect(promptSent).toMatch(/relative size adjective/i);
+    expect(promptSent).toMatch(/large/);
+    expect(promptSent).toMatch(/does NOT apply to "medium"/i);
+  });
 });
