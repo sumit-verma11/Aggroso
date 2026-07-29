@@ -285,3 +285,30 @@ Format per entry: what happened, what was wrong, why, what I did instead.
 - Watched the actual GitHub Actions run to green (not just "should work") via `gh run list`/
   `gh run view -v` after each fix, including a final Node 20→22 bump once GitHub's own
   deprecation annotation flagged it.
+
+## Real live-data KB gaps ("bread not in knowledge base", "cheese" also missing)
+- User did their own live testing (not a QA agent) and reported, from an actual screenshot
+  of the /log review screen, that "Bread" was flagged "not in knowledge base" and that
+  egg/orange quantities looked wrong. Checked the real numbers first rather than assuming
+  the report was correct: the egg (300g) and orange (393g) figures were the extraction's
+  own disclosed unit-conversion assumptions from the meal text, not a computation bug —
+  `computeItem()`'s math on those grams was correct.
+- The bread report was real, though: `data/nutrition-seed.csv`'s "White bread" row only had
+  aliases `white toast;toast`, no bare `bread` — so a generic "Bread" extraction from real
+  meal text had nothing to resolve against. Added `bread` as a third alias.
+- Wrote a regression test (`lib/nutrition/__tests__/seed-data-coverage.test.ts`) that checks
+  the REAL shipped CSV (not a synthetic fixture) resolves a set of common generic terms
+  (bread, rice, chicken, egg, milk, banana, tofu, cheese, yogurt, butter) — deliberately
+  different from `lookup.test.ts`'s existing tests, which only exercise the matching
+  algorithm against invented rows and would never catch a real data gap like this. Existing
+  `lookup.test.ts` coverage was necessary but not sufficient.
+- That test caught a second, previously-unreported bug on its first run: "Cheddar cheese"
+  had only the alias `cheddar`, no bare `cheese`, so a generic "cheese" mention would also
+  fail to resolve. Added `cheese` as a second alias. Re-ran the coverage test: 10/10 pass.
+- Re-seeded the database twice (once per fix) via `npm run db:seed` and reran the full test
+  suite (66 tests, 9 files, all green) plus a clean production build afterward.
+- User pushed back mid-fix that "adding csv is not in email requirement" — clarified this is
+  bug-fixing on already-in-scope functionality (the assignment explicitly requires nutrition
+  values come from "a small, documented knowledge base"), not new scope. The CSV is that
+  knowledge base; fixing a missing alias is the same category of work as fixing any other bug
+  in required functionality, not a feature addition.

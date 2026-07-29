@@ -78,7 +78,7 @@ npm run db:seed      # loads data/nutrition-seed.csv into nutrition_items
 
 ```bash
 npm run dev          # http://localhost:3000
-npm test             # run the test suite (56 tests)
+npm test             # run the test suite (66 tests)
 npm run build        # production build
 ```
 
@@ -154,7 +154,7 @@ a bit of paneer           → flagged "not in knowledge base" on the review scre
 | Preserve meal history, corrections, approved plans | Append-only `meals`/`meal_items`/`meal_plans`/`meal_plan_items`; nothing is ever overwritten, only new rows added |
 | Loading / empty / validation / success / failure states | Every route has a `loading.tsx`; forms show inline validation errors, success/failure messages; dashboard has an explicit empty state |
 | Structured app + AI-workflow logs | `lib/logger.ts` (pino JSON) + `lib/observability/with-action-logging.ts` per server action; `ai_runs` table + a separate `ai_workflow` log line per model call |
-| Tests for important behavior | 56 Vitest tests — see [Tests](#tests) |
+| Tests for important behavior | 66 Vitest tests — see [Tests](#tests) |
 | Health check | `GET /api/health` — verifies real DB connectivity |
 | Deployed application | Vercel — see link above |
 | CI (test/lint/build gated on push) | `.github/workflows/ci.yml` — see [CI](#ci) |
@@ -200,7 +200,7 @@ Documented here rather than left unexplained:
 npm test
 ```
 
-56 tests across 8 files:
+66 tests across 9 files:
 
 | File | Covers |
 |---|---|
@@ -304,7 +304,7 @@ DATABASE_URL="<production connection string>" npm run db:seed
 ## CI
 
 `.github/workflows/ci.yml` runs on every push/PR to `main`: install, test
-(56 Vitest tests), lint, and build. The build step uses placeholder
+(66 Vitest tests), lint, and build. The build step uses placeholder
 `DATABASE_URL`/`GEMINI_API_KEY` values — not real credentials — since every
 route is `force-dynamic`, so the build never actually connects to either
 service; the placeholders only satisfy the "is this set at all" guard checks
