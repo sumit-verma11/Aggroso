@@ -262,3 +262,26 @@ Format per entry: what happened, what was wrong, why, what I did instead.
   visibility (Tab through nav links and form inputs — all show a visible focus ring, custom
   `focus:ring-2` box-shadow on inputs rather than the browser default, still clearly visible)
   — both clean, no changes needed.
+
+## CI (added on request — "why don't tests run on every push?")
+- Wasn't in the assignment's required scope, so it was deprioritized versus the 10 core
+  modules — added now since there was idle time waiting on the Gemini quota anyway, and it's
+  cheap, safe, and strengthens "testing and QA" / "code structure and maintainability."
+- Verified locally FIRST, before writing the workflow, that `next build` doesn't need real
+  credentials (every route is `force-dynamic`, so DB/AI calls only happen per-request, not
+  during static build analysis) — built successfully with `DATABASE_URL`/`GEMINI_API_KEY`
+  entirely unset, then confirmed obviously-fake placeholder values also work. This meant CI
+  needed zero real GitHub secrets, not just fewer of them.
+- First CI push failed immediately: `package-lock.json` was stale relative to `package.json`
+  (missing several esbuild platform entries outright — a real hygiene gap `npm install`
+  locally had been silently tolerating without ever telling me). Regenerated it from a clean
+  `node_modules`.
+- Second failure, caught by reproducing locally rather than guessing from the CI log alone:
+  `npm ci` errors on this dependency tree's optional platform-specific esbuild binaries
+  (`EBADPLATFORM` on things like `@esbuild/aix-ppc64` — a package that should just be silently
+  skipped as unsupported-platform-optional, not fail the install) — reproduced with a plain
+  `rm -rf node_modules && npm ci` on my own machine, confirming it's a real npm-version/
+  lockfile-shape issue and not a CI-environment fluke. Switched the workflow to `npm install`.
+- Watched the actual GitHub Actions run to green (not just "should work") via `gh run list`/
+  `gh run view -v` after each fix, including a final Node 20→22 bump once GitHub's own
+  deprecation annotation flagged it.
