@@ -34,9 +34,11 @@ API before building on it. See `lib/ai/gemini.ts`.
   estimate, the app asks a clarification question before saving.
 - Nothing is written to meal history or plans without explicit user approval.
 - The app must never provide medical diagnosis, treatment, or guaranteed outcomes.
-  This is behavioral (no screen, prompt, or generated copy does any of those
-  things) — there is deliberately no UI disclaimer banner; see README.md's
-  "Intentionally out of scope" section for why.
+  This is behavioral first (no screen, prompt, or generated copy does any of
+  those things), reinforced by a small persistent footer disclaimer on every
+  page (`app/components/Footer.tsx`) — deliberately minimal, not an alarm
+  banner, but always visible. See README.md's "Intentionally out of scope"
+  section for the history of this decision (removed, then re-added).
 
 Every screen needs: loading, empty, validation error, success, and failure states.
 

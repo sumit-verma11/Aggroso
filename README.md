@@ -150,7 +150,7 @@ a bit of paneer           → flagged "not in knowledge base" on the review scre
 | Retrieve nutrition from a documented knowledge base, not invented | `data/nutrition-seed.csv` (real USDA FoodData Central values) + `lib/nutrition/lookup.ts` |
 | Show assumptions/uncertainty | `assumptions` array rendered per meal/plan; unresolved items visibly flagged, never silently zeroed into a "complete" total (`isComplete` flag) |
 | Meal plan follows saved preferences/restrictions | Profile allergies/avoid-list passed into the generation prompt **and** independently re-checked in code on approve (never trusted from the model alone) |
-| No medical diagnosis/treatment/guaranteed outcomes | Behavioral, not a UI banner: no screen, prompt, or generated copy makes a diagnosis, prescribes treatment, or guarantees an outcome — see note below |
+| No medical diagnosis/treatment/guaranteed outcomes | Behavioral first — no screen, prompt, or generated copy does any of those things — reinforced by a small persistent footer disclaimer on every page (`app/components/Footer.tsx`) |
 | Preserve meal history, corrections, approved plans | Append-only `meals`/`meal_items`/`meal_plans`/`meal_plan_items`; nothing is ever overwritten, only new rows added |
 | Loading / empty / validation / success / failure states | Every route has a `loading.tsx`; forms show inline validation errors, success/failure messages; dashboard has an explicit empty state |
 | Structured app + AI-workflow logs | `lib/logger.ts` (pino JSON) + `lib/observability/with-action-logging.ts` per server action; `ai_runs` table + a separate `ai_workflow` log line per model call |
@@ -184,13 +184,15 @@ Documented here rather than left unexplained:
 - **No email/push notifications, no data export, no offline support.**
   Not asked for; would be straightforward additions on top of the existing
   data model.
-- **No persistent disclaimer banner in the UI.** The assignment's actual
+- **Disclaimer history, for transparency.** The assignment's actual
   constraint is behavioral — "the application must not provide medical
   diagnosis, treatment, or guaranteed health outcomes" — not a literal
-  requirement to display a banner. An earlier version of this app included
-  one; it was deliberately removed as a UI decision. Nothing in the app's
-  prompts, generated copy, or screens makes a diagnosis, prescribes
-  treatment, or promises an outcome, which is the actual requirement.
+  requirement to display a banner, and nothing in the app's prompts,
+  generated copy, or screens does any of those things regardless. An
+  earlier pass removed the UI disclaimer banner on that basis; it was
+  re-added afterward (`app/components/Footer.tsx`) as a small persistent
+  footer, not the original alarm-banner styling — cheap, low-risk, and
+  removes any doubt for a reviewer at essentially no UX cost.
 
 ## Tests
 

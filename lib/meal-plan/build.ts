@@ -12,6 +12,7 @@ export interface PlanDraftItem {
   unit: string;
   nutritionItemId: string | null;
   matchedName: string | null;
+  matchedSource: string | null;
   referenceNutrition: NutritionValues | null;
   status: "computed" | "unresolved_item" | "unresolved_quantity";
   grams: number | null;
@@ -58,6 +59,7 @@ export function buildPlanDraft(
       unit: item.unit,
       nutritionItemId: matched?.id ?? null,
       matchedName: matched?.canonicalName ?? null,
+      matchedSource: matched?.source ?? null,
       referenceNutrition,
       ...computed,
       conflicts: [

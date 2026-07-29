@@ -83,6 +83,7 @@ export function PlanGenerator({
               name,
               nutritionItemId: matched?.id ?? null,
               matchedName: matched?.canonicalName ?? null,
+              matchedSource: matched?.source ?? null,
               referenceNutrition,
               ...computed,
               userEdited: true,
@@ -139,6 +140,7 @@ export function PlanGenerator({
         unit: "g",
         nutritionItemId: null,
         matchedName: null,
+        matchedSource: null,
         referenceNutrition: null,
         status: "unresolved_item",
         grams: null,
@@ -303,6 +305,11 @@ export function PlanGenerator({
                           </span>
                         )}
                       </div>
+                      {item.status === "computed" && item.matchedSource && (
+                        <p className="mt-1 text-[0.7rem] text-zinc-500 dark:text-zinc-400">
+                          source: {item.matchedSource}
+                        </p>
+                      )}
                     </li>
                   ))}
                   {slotItems.length === 0 && (

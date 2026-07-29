@@ -13,6 +13,8 @@ export interface DraftItem {
   confidence: number;
   nutritionItemId: string | null;
   matchedName: string | null;
+  /** e.g. "USDA FoodData Central (SR Legacy)" — null when unresolved_item. */
+  matchedSource: string | null;
   /** Per-100g reference values for the matched food — sent to the client so
    * editing quantity/unit can recompute via the same computeItem() logic
    * without a server round-trip. Null when unresolved_item. */
@@ -68,6 +70,7 @@ export function buildMealDraft(
       confidence: item.confidence,
       nutritionItemId: matched?.id ?? null,
       matchedName: matched?.canonicalName ?? null,
+      matchedSource: matched?.source ?? null,
       referenceNutrition,
       ...computed,
       conflicts: [

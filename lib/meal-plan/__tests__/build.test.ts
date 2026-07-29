@@ -13,6 +13,7 @@ const KB: NutritionItemRow[] = [
     proteinG: 31,
     carbsG: 0,
     fatG: 3.57,
+    source: "USDA FoodData Central (SR Legacy)",
   },
   {
     id: "rice-1",
@@ -23,6 +24,7 @@ const KB: NutritionItemRow[] = [
     proteinG: 2.69,
     carbsG: 28.2,
     fatG: 0.28,
+    source: "USDA FoodData Central (SR Legacy)",
   },
 ];
 

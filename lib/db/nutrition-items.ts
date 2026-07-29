@@ -3,7 +3,7 @@ import { nutritionItems } from "./schema";
 import type { LookupItem } from "../nutrition/lookup";
 import type { NutritionValues } from "../nutrition/calculate";
 
-export type NutritionItemRow = LookupItem & NutritionValues;
+export type NutritionItemRow = LookupItem & NutritionValues & { source: string };
 
 export async function getAllNutritionItems(): Promise<NutritionItemRow[]> {
   const rows = await db.select().from(nutritionItems);
@@ -16,5 +16,6 @@ export async function getAllNutritionItems(): Promise<NutritionItemRow[]> {
     proteinG: row.proteinG,
     carbsG: row.carbsG,
     fatG: row.fatG,
+    source: row.source,
   }));
 }

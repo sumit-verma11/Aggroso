@@ -28,6 +28,7 @@ interface EditableItem {
   preparationMethod: string | null;
   nutritionItemId: string | null;
   matchedName: string | null;
+  matchedSource: string | null;
   referenceNutrition: NutritionValues | null;
   status: DraftItem["status"];
   grams: number | null;
@@ -56,6 +57,7 @@ function toEditable(item: DraftItem): EditableItem {
     preparationMethod: item.preparationMethod,
     nutritionItemId: item.nutritionItemId,
     matchedName: item.matchedName,
+    matchedSource: item.matchedSource,
     referenceNutrition: item.referenceNutrition,
     status: item.status,
     grams: item.grams,
@@ -272,6 +274,11 @@ export function MealReview({ draft }: { draft: MealDraft }) {
                   </span>
                 )}
               </div>
+              {item.status === "computed" && item.matchedSource && (
+                <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+                  source: {item.matchedSource}
+                </p>
+              )}
 
               <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
                 <label className="text-xs text-zinc-500">

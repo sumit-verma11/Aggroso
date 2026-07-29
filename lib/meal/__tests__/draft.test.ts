@@ -13,6 +13,7 @@ const KB: NutritionItemRow[] = [
     proteinG: 1.09,
     carbsG: 22.8,
     fatG: 0.33,
+    source: "USDA FoodData Central (SR Legacy)",
   },
   {
     id: "peanut-1",
@@ -23,6 +24,7 @@ const KB: NutritionItemRow[] = [
     proteinG: 24.1,
     carbsG: 21.6,
     fatG: 49.9,
+    source: "USDA FoodData Central (SR Legacy)",
   },
 ];
 
